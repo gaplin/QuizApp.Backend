@@ -18,7 +18,7 @@ internal class QuizAppContext : IQuizAppContext
         _dbSettings = dbSettings.Value;
     }
 
-    public IMongoCollection<Quiz> Quizzes
+    IMongoCollection<Quiz> IQuizAppContext.Quizzes
     {
         get
         {

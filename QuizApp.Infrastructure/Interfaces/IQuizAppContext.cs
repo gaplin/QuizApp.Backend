@@ -5,5 +5,5 @@ namespace QuizApp.Infrastructure.Interfaces;
 
 internal interface IQuizAppContext
 {
-    IMongoCollection<Quiz> Quizzes { get; }
+    internal IMongoCollection<Quiz> Quizzes { get; }
 }
