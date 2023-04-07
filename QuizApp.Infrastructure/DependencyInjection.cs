@@ -31,7 +31,6 @@ public static class DependencyInjection
         services.AddSingleton(sp =>
         {
             var client = new MongoClient(settings.ConnectionString);
-
             return client.GetDatabase(settings.DatabaseName);
         });
     }

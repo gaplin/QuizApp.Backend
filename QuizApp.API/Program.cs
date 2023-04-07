@@ -4,14 +4,22 @@ using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
-var config = builder.Configuration;
-var section = builder.Configuration.GetSection("QuizAppDatabase");
-var tf = section["ConnectionString"];
 
+builder.Services.AddEndpointsApiExplorer();
+builder.Services.AddSwaggerGen(options =>
+{
+    options.EnableAnnotations();
+});
 builder.Services.AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"));
 builder.Services.AddDomain();
 
 var app = builder.Build();
+
+if (app.Environment.IsDevelopment())
+{
+    app.UseSwagger();
+    app.UseSwaggerUI();
+}
 
 var quizzes = app.MapGroup("/quizzes");
 
@@ -43,7 +51,7 @@ quizzes.MapPut("/{id:length(24)}", async (string id, Quiz updatedQuiz, IQuizServ
 
 quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
 {
-    if(await service.GetAsync(id) is not null)
+    if (await service.GetAsync(id) is not null)
     {
         await service.DeleteAsync(id);
         return Results.NoContent();
@@ -51,7 +59,5 @@ quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
 
     return Results.NotFound();
 });
-
-app.MapGet("/", () => "Hello World!");
 
 app.Run();
