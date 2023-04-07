@@ -1,6 +1,9 @@
-﻿namespace QuizApp.Infrastructure.DbSettings;
+﻿using System.ComponentModel.DataAnnotations;
+
+namespace QuizApp.Infrastructure.DbSettings;
 
 internal class CollectionNamesSettings
 {
-    public required string Quizzes { get; set; }
+    [Required]
+    public string Quizzes { get; set; } = null!;
 }
