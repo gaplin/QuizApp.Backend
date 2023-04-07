@@ -4,7 +4,7 @@ using QuizApp.Domain.Interfaces.Services;
 
 namespace QuizApp.Domain.Services;
 
-public class QuizService : IQuizService
+internal class QuizService : IQuizService
 {
     private readonly IQuizRepository _repo;
 
