@@ -8,5 +8,5 @@ public interface IQuizService
     Task<List<Quiz>> GetAsync();
     Task<Quiz?> GetAsync(string id);
     Task InsertAsync(Quiz newQuiz);
-    Task<bool> UpdateAsync(string id, Quiz updatedQuiz);
+    Task<bool> UpdateAsync(Quiz updatedQuiz);
 }

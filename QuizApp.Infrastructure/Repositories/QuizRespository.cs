@@ -23,9 +23,15 @@ internal class QuizRespository : IQuizRepository
     public async Task InsertAsync(Quiz newQuiz) =>
         await _quizzes.InsertOneAsync(newQuiz);
 
-    public async Task UpdateAsync(string id, Quiz updatedQuiz) =>
-        await _quizzes.ReplaceOneAsync(x => x.Id == id, updatedQuiz);
+    public async Task<bool> UpdateAsync(Quiz updatedQuiz)
+    {
+        var replaceOneResult = await _quizzes.ReplaceOneAsync(x => x.Id == updatedQuiz.Id, updatedQuiz);
+        return replaceOneResult.MatchedCount == 1;
+    }
 
-    public async Task DeleteAsync(string id) =>
-        await _quizzes.DeleteOneAsync(x => x.Id == id);
+    public async Task<bool> DeleteAsync(string id)
+    {
+        var deleteResult = await _quizzes.DeleteOneAsync(x => x.Id == id);
+        return deleteResult.DeletedCount == 1;
+    }
 }

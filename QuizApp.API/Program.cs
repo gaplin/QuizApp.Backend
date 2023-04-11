@@ -38,8 +38,8 @@ quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service) =>
     return Results.Created($"/quizzes/{newQuiz.Id}", newQuiz);
 });
 
-quizzes.MapPut("/{id:length(24)}", async (string id, Quiz updatedQuiz, IQuizService service) =>
-    await service.UpdateAsync(id, updatedQuiz)
+quizzes.MapPut("/{id:length(24)}", async (Quiz updatedQuiz, IQuizService service) =>
+    await service.UpdateAsync(updatedQuiz)
         is true
             ? Results.NoContent()
             : Results.NotFound());

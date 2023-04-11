@@ -4,9 +4,9 @@ namespace QuizApp.Domain.Interfaces.Repositories;
 
 public interface IQuizRepository
 {
-    Task DeleteAsync(string id);
+    Task<bool> DeleteAsync(string id);
     Task<List<Quiz>> GetAsync();
     Task<Quiz?> GetAsync(string id);
     Task InsertAsync(Quiz newQuiz);
-    Task UpdateAsync(string id, Quiz updatedQuiz);
+    Task<bool> UpdateAsync(Quiz updatedQuiz);
 }
