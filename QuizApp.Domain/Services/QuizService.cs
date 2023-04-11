@@ -22,9 +22,24 @@ internal class QuizService : IQuizService
     public async Task InsertAsync(Quiz newQuiz) =>
         await _repo.InsertAsync(newQuiz);
 
-    public async Task UpdateAsync(string id, Quiz updatedQuiz) =>
-        await _repo.UpdateAsync(id, updatedQuiz);
+    public async Task<bool> UpdateAsync(string id, Quiz updatedQuiz)
+    {
+        if(await _repo.GetAsync(id) is not null)
+        {
+            await _repo.UpdateAsync(id, updatedQuiz);
+            return true;
+        }
 
-    public async Task DeleteAsync(string id) =>
-        await _repo.DeleteAsync(id);
+        return false;
+    }
+
+    public async Task<bool> DeleteAsync(string id)
+    {
+        if (_repo.DeleteAsync(id) is not null)
+        {
+            await _repo.DeleteAsync(id);
+            return true;
+        }
+        return false;
+    }
 }
