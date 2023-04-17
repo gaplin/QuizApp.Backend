@@ -5,6 +5,17 @@ using QuizApp.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
+builder.Services.AddCors(options =>
+{
+    options.AddDefaultPolicy(
+        builder =>
+        {
+            builder.AllowAnyOrigin();
+            builder.AllowAnyMethod();
+            builder.AllowAnyHeader();
+        });
+});
+
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(options =>
 {
@@ -14,6 +25,8 @@ builder.Services.AddInfrastructure(builder.Configuration.GetSection("QuizAppData
 builder.Services.AddDomain();
 
 var app = builder.Build();
+
+app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
