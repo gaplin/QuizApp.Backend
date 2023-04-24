@@ -13,7 +13,7 @@ internal class QuizService : IQuizService
         _repo = repo;
     }
 
-    public async Task<List<Quiz>> GetAsync() =>
+    public async Task<IList<Quiz>> GetAsync() =>
         await _repo.GetAsync();
 
     public async Task<Quiz?> GetAsync(string id) =>

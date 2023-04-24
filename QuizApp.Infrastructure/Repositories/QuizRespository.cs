@@ -14,7 +14,7 @@ internal class QuizRespository : IQuizRepository
         _quizzes = context.Quizzes;
     }
 
-    public async Task<List<Quiz>> GetAsync() =>
+    public async Task<IList<Quiz>> GetAsync() =>
         await _quizzes.Find(_ => true).ToListAsync();
 
     public async Task<Quiz?> GetAsync(string id) =>
