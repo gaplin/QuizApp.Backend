@@ -5,24 +5,24 @@ using QuizApp.Infrastructure;
 
 var builder = WebApplication.CreateBuilder(args);
 
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(
-        builder =>
-        {
-            builder.AllowAnyOrigin();
-            builder.AllowAnyMethod();
-            builder.AllowAnyHeader();
-        });
-});
-
-builder.Services.AddEndpointsApiExplorer();
-builder.Services.AddSwaggerGen(options =>
-{
-    options.EnableAnnotations();
-});
-builder.Services.AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"));
-builder.Services.AddDomain();
+builder.Services
+    .AddCors(options =>
+    {
+        options.AddDefaultPolicy(
+            builder =>
+            {
+                builder.AllowAnyOrigin();
+                builder.AllowAnyMethod();
+                builder.AllowAnyHeader();
+            });
+    })
+    .AddEndpointsApiExplorer()
+    .AddSwaggerGen(options =>
+    {
+        options.EnableAnnotations();
+    })
+    .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
+    .AddDomain();
 
 var app = builder.Build();
 
@@ -30,8 +30,9 @@ app.UseCors();
 
 if (app.Environment.IsDevelopment())
 {
-    app.UseSwagger();
-    app.UseSwaggerUI();
+    app
+        .UseSwagger()
+        .UseSwaggerUI();
 }
 
 var quizzes = app.MapGroup("/quizzes");
@@ -62,5 +63,11 @@ quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
         is true
             ? Results.NoContent()
             : Results.NotFound());
+
+quizzes.MapDelete("/", async (IQuizService service) =>
+{
+    await service.DeleteAsync();
+    return Results.NoContent();
+});
 
 app.Run();

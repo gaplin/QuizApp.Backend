@@ -27,4 +27,8 @@ internal class QuizService : IQuizService
 
     public async Task<bool> DeleteAsync(string id) =>
         await _repo.DeleteAsync(id);
+
+    public async Task DeleteAsync() =>
+        await _repo.DeleteAsync();
+        
 }

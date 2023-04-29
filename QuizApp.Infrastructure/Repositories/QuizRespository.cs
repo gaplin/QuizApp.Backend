@@ -34,4 +34,7 @@ internal class QuizRespository : IQuizRepository
         var deleteResult = await _quizzes.DeleteOneAsync(x => x.Id == id);
         return deleteResult.DeletedCount == 1;
     }
+
+    public async Task DeleteAsync() =>
+        _ = await _quizzes.DeleteManyAsync(_ => true);
 }

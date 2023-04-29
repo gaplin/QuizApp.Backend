@@ -5,6 +5,7 @@ namespace QuizApp.Domain.Interfaces.Services;
 public interface IQuizService
 {
     Task<bool> DeleteAsync(string id);
+    Task DeleteAsync();
     Task<IList<Quiz>> GetAsync();
     Task<Quiz?> GetAsync(string id);
     Task InsertAsync(Quiz newQuiz);
