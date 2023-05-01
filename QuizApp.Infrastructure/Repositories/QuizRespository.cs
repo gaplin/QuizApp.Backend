@@ -1,32 +1,43 @@
 ﻿using MongoDB.Driver;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Repositories;
+using QuizApp.Infrastructure.DbModels;
 using QuizApp.Infrastructure.Interfaces;
+using QuizApp.Infrastructure.Mappers;
+using QuizApp.Infrastructure.Projections;
 
 namespace QuizApp.Infrastructure.Repositories;
 
 internal class QuizRespository : IQuizRepository
 {
-    private readonly IMongoCollection<Quiz> _quizzes;
+    private readonly IMongoCollection<QuizModel> _quizzes;
 
     public QuizRespository(IQuizAppContext context)
     {
         _quizzes = context.Quizzes;
     }
 
-    public async Task<IList<Quiz>> GetAsync() =>
-        await _quizzes.Find(_ => true).ToListAsync();
+    public async Task<List<QuizBase>> GetBaseAsync() =>
+        await _quizzes
+            .Find(_ => true)
+            .Project(QuizProjections.ModelToBaseEntityProjection())
+            .ToListAsync();
+
+    public async Task<List<Quiz>> GetAsync() =>
+        await _quizzes
+            .Find(_ => true)
+            .Project(QuizProjections.ModelToEntityProjection())
+            .ToListAsync();
 
     public async Task<Quiz?> GetAsync(string id) =>
-        await _quizzes.Find(x => x.Id == id).FirstOrDefaultAsync();
+            await _quizzes.Find(x => x.Id == id)
+            .Project(QuizProjections.ModelToEntityProjection())
+            .FirstOrDefaultAsync();
 
-    public async Task InsertAsync(Quiz newQuiz) =>
-        await _quizzes.InsertOneAsync(newQuiz);
-
-    public async Task<bool> UpdateAsync(Quiz updatedQuiz)
+    public async Task InsertAsync(Quiz newQuiz)
     {
-        var replaceOneResult = await _quizzes.ReplaceOneAsync(x => x.Id == updatedQuiz.Id, updatedQuiz);
-        return replaceOneResult.MatchedCount == 1;
+        var model = QuizMapper.MapToModel(newQuiz);
+        await _quizzes.InsertOneAsync(model);
     }
 
     public async Task<bool> DeleteAsync(string id)

@@ -1,6 +1,6 @@
-﻿namespace QuizApp.Domain.Entities;
+﻿namespace QuizApp.Infrastructure.DbModels;
 
-public class Question
+internal class QuestionModel
 {
     public string Text { get; set; } = null!;
     public List<string> Answers { get; set; } = null!;

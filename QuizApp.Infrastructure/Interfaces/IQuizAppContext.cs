@@ -1,9 +1,9 @@
 ﻿using MongoDB.Driver;
-using QuizApp.Domain.Entities;
+using QuizApp.Infrastructure.DbModels;
 
 namespace QuizApp.Infrastructure.Interfaces;
 
 internal interface IQuizAppContext
 {
-    internal IMongoCollection<Quiz> Quizzes { get; }
+    internal IMongoCollection<QuizModel> Quizzes { get; }
 }

@@ -16,8 +16,8 @@ internal class QuizService : IQuizService
         _quizRandomizer = quizRandomizer;
     }
 
-    public async Task<IList<Quiz>> GetAsync() =>
-        await _repo.GetAsync();
+    public async Task<List<QuizBase>> GetBaseInfoAsync() =>
+        await _repo.GetBaseAsync();
 
     public async Task<Quiz?> GetAsync(string id, bool shuffle)
     {
@@ -34,12 +34,12 @@ internal class QuizService : IQuizService
     public async Task InsertAsync(Quiz newQuiz) =>
         await _repo.InsertAsync(newQuiz);
 
-    public async Task<bool> UpdateAsync(Quiz updatedQuiz) =>
-        await _repo.UpdateAsync(updatedQuiz);
-
     public async Task<bool> DeleteAsync(string id) =>
         await _repo.DeleteAsync(id);
 
     public async Task DeleteAsync() =>
         await _repo.DeleteAsync();
+
+    public async Task<List<Quiz>> GetAsync() =>
+        await _repo.GetAsync();
 }

@@ -1,6 +1,6 @@
 ﻿using Microsoft.Extensions.Options;
 using MongoDB.Driver;
-using QuizApp.Domain.Entities;
+using QuizApp.Infrastructure.DbModels;
 using QuizApp.Infrastructure.DbSettings;
 using QuizApp.Infrastructure.Interfaces;
 
@@ -10,7 +10,7 @@ internal class QuizAppContext : IQuizAppContext
 {
     private readonly IMongoDatabase _db;
     private readonly MongoDbSettings _dbSettings;
-    private IMongoCollection<Quiz>? _quizzes;
+    private IMongoCollection<QuizModel>? _quizzes;
 
     public QuizAppContext(IMongoDatabase db, IOptions<MongoDbSettings> dbSettings)
     {
@@ -18,11 +18,11 @@ internal class QuizAppContext : IQuizAppContext
         _dbSettings = dbSettings.Value;
     }
 
-    IMongoCollection<Quiz> IQuizAppContext.Quizzes
+    IMongoCollection<QuizModel> IQuizAppContext.Quizzes
     {
         get
         {
-            _quizzes ??= _db.GetCollection<Quiz>(_dbSettings.Collections.Quizzes);
+            _quizzes ??= _db.GetCollection<QuizModel>(_dbSettings.Collections.Quizzes);
             return _quizzes;
         }
     }

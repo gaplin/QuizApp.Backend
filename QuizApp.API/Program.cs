@@ -17,10 +17,7 @@ builder.Services
             });
     })
     .AddEndpointsApiExplorer()
-    .AddSwaggerGen(options =>
-    {
-        options.EnableAnnotations();
-    })
+    .AddSwaggerGen()
     .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
     .AddDomain();
 
@@ -40,6 +37,9 @@ var quizzes = app.MapGroup("/quizzes");
 quizzes.MapGet("/", async (IQuizService service) =>
     await service.GetAsync());
 
+quizzes.MapGet("/baseInfo", async (IQuizService service) =>
+    await service.GetBaseInfoAsync());
+
 quizzes.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService service) =>
     await service.GetAsync(id, shuffle)
         is Quiz quiz
@@ -51,12 +51,6 @@ quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service) =>
     await service.InsertAsync(newQuiz);
     return Results.Created($"/quizzes/{newQuiz.Id}", newQuiz);
 });
-
-quizzes.MapPut("/{id:length(24)}", async (Quiz updatedQuiz, IQuizService service) =>
-    await service.UpdateAsync(updatedQuiz)
-        is true
-            ? Results.NoContent()
-            : Results.NotFound());
 
 quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
     await service.DeleteAsync(id)
