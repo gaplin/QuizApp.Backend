@@ -1,4 +1,5 @@
 ﻿using QuizApp.Domain.Entities;
+using QuizApp.Domain.Interfaces.Orderers;
 using QuizApp.Domain.Interfaces.Repositories;
 using QuizApp.Domain.Interfaces.Services;
 
@@ -7,10 +8,12 @@ namespace QuizApp.Domain.Services;
 internal class QuizService : IQuizService
 {
     private readonly IQuizRepository _repo;
+    private readonly IQuizReorderer _quizOrderer;
 
-    public QuizService(IQuizRepository repo)
+    public QuizService(IQuizRepository repo, IQuizReorderer quizOrderer)
     {
         _repo = repo;
+        _quizOrderer = quizOrderer;
     }
 
     public async Task<IList<Quiz>> GetAsync() =>
@@ -30,5 +33,11 @@ internal class QuizService : IQuizService
 
     public async Task DeleteAsync() =>
         await _repo.DeleteAsync();
-        
+
+    public async Task<IList<Quiz>> GetInRandomOrderAsync()
+    {
+        var quizzes = await _repo.GetAsync();
+        _quizOrderer.Reorder(quizzes);
+        return quizzes;
+    }
 }

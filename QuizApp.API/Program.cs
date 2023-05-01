@@ -37,6 +37,9 @@ if (app.Environment.IsDevelopment())
 
 var quizzes = app.MapGroup("/quizzes");
 
+quizzes.MapGet("/randomOrder", async (IQuizService service) =>
+    await service.GetInRandomOrderAsync());
+
 quizzes.MapGet("/", async (IQuizService service) =>
     await service.GetAsync());
 
