@@ -1,18 +1,18 @@
 ﻿using QuizApp.Domain.Entities;
-using QuizApp.Domain.Interfaces.Orderers;
+using QuizApp.Domain.Interfaces.Randomizers;
 
-namespace QuizApp.Domain.Orderers;
+namespace QuizApp.Domain.Randomizers;
 
-internal class RandomQuizReorderer : IQuizReorderer
+internal class QuizRandomizer : IQuizRandomizer
 {
     private static readonly Random Random = new();
-    public void Reorder(IList<Quiz> quizzes)
+    public void Randomize(Quiz quiz)
     {
-        foreach (var question in quizzes.SelectMany(x => x.Questions))
+        foreach (var question in quiz.Questions)
         {
             ShuffleQuestion(question);
         }
-        Shuffle(quizzes);
+        Shuffle(quiz.Questions);
     }
 
     private static void ShuffleQuestion(Question question)
@@ -24,7 +24,7 @@ internal class RandomQuizReorderer : IQuizReorderer
 
     private static void Shuffle<T>(IList<T> values)
     {
-        int n = values.Count;
+        var n = values.Count;
         while (n > 1)
         {
             int k = Random.Next(n--);
