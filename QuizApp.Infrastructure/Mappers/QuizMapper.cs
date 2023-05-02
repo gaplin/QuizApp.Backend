@@ -10,6 +10,7 @@ internal static class QuizMapper
         Id = entity.Id,
         Title = entity.Title,
         Author = entity.Author,
+        Category = entity.Category,
         Questions = MapQuestions(entity.Questions)
     };
 
