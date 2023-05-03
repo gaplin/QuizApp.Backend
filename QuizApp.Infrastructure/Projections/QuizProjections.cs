@@ -13,6 +13,7 @@ internal static class QuizProjections
             Author = model.Author,
             Category = model.Category,
             Title = model.Title,
+            NumberOfQuestions = model.Questions.Count,
         });
 
     internal static ProjectionDefinition<QuizModel, Quiz> ModelToEntityProjection()
@@ -22,6 +23,7 @@ internal static class QuizProjections
             Author = model.Author,
             Category = model.Category,
             Title = model.Title,
+            NumberOfQuestions = model.Questions.Count,
             Questions = model.Questions.Select(x => new Question()
             {
                 Answers = x.Answers,
