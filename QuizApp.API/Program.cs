@@ -41,9 +41,11 @@ builder.Services
             Scheme = "Bearer",
             BearerFormat = "JWT",
             In = ParameterLocation.Header,
-            Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n
-                      Enter 'Bearer' [space] and then your token in the text input below.
-                      \r\n\r\nExample: 'Bearer 12345abcdef'",
+            Description = """
+                      JWT Authorization header using the Bearer scheme.<br>
+                      Enter 'Bearer' [space] and then your token in the text input below.<br>
+                      Example: 'Bearer 12345abcdef'
+                      """,
         });
         c.AddSecurityRequirement(new OpenApiSecurityRequirement
         {
