@@ -1,8 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
+using Microsoft.IdentityModel.Tokens;
+using Microsoft.OpenApi.Models;
 using QuizApp.Domain;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure;
+using System.Security.Claims;
+using System.Text;
 using System.Text.Json.Serialization;
 using MvcJsonOptions = Microsoft.AspNetCore.Mvc.JsonOptions;
 
@@ -26,9 +32,55 @@ builder.Services
         options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
     )
     .AddEndpointsApiExplorer()
-    .AddSwaggerGen()
+    .AddSwaggerGen(c =>
+    {
+        c.AddSecurityDefinition("Bearer", new OpenApiSecurityScheme()
+        {
+            Name = "Authorization",
+            Type = SecuritySchemeType.ApiKey,
+            Scheme = "Bearer",
+            BearerFormat = "JWT",
+            In = ParameterLocation.Header,
+            Description = @"JWT Authorization header using the Bearer scheme. \r\n\r\n
+                      Enter 'Bearer' [space] and then your token in the text input below.
+                      \r\n\r\nExample: 'Bearer 12345abcdef'",
+        });
+        c.AddSecurityRequirement(new OpenApiSecurityRequirement
+        {
+            {
+                new OpenApiSecurityScheme
+                {
+                    Reference = new OpenApiReference
+                    {
+                        Type = ReferenceType.SecurityScheme,
+                        Id = "Bearer"
+                    }
+                },
+                Array.Empty<string>()
+            }
+        });
+    })
     .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
-    .AddDomain();
+    .AddDomain(builder.Configuration.GetSection("Jwt"));
+
+builder.Services
+    .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+builder.Services.AddAuthorization(options =>
+    options.FallbackPolicy = options.DefaultPolicy);
 
 var app = builder.Build();
 
@@ -40,6 +92,7 @@ if (app.Environment.IsDevelopment())
         .UseSwagger()
         .UseSwaggerUI();
 }
+app.UseAuthorization();
 
 var quizzes = app.MapGroup("/quizzes");
 var users = app.MapGroup("/users");
@@ -99,6 +152,11 @@ users.MapDelete("/", async (IUserService service) =>
 {
     await service.DeleteAsync();
     return Results.NoContent();
+});
+
+app.MapPost("/login", [AllowAnonymous] (ILoginService service, ClaimsPrincipal user) =>
+{
+    return Results.Ok(service.LogInAndGetToken());
 });
 
 app.Run();
