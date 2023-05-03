@@ -11,6 +11,7 @@ internal class QuizAppContext : IQuizAppContext
     private readonly IMongoDatabase _db;
     private readonly MongoDbSettings _dbSettings;
     private IMongoCollection<QuizModel>? _quizzes;
+    private IMongoCollection<UserModel>? _users;
 
     public QuizAppContext(IMongoDatabase db, IOptions<MongoDbSettings> dbSettings)
     {
@@ -24,6 +25,15 @@ internal class QuizAppContext : IQuizAppContext
         {
             _quizzes ??= _db.GetCollection<QuizModel>(_dbSettings.Collections.Quizzes);
             return _quizzes;
+        }
+    }
+
+    IMongoCollection<UserModel> IQuizAppContext.Users
+    {
+        get
+        {
+            _users ??= _db.GetCollection<UserModel>(_dbSettings.Collections.Users);
+            return _users;
         }
     }
 }

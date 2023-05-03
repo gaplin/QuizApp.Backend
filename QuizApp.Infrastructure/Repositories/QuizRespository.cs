@@ -34,10 +34,11 @@ internal class QuizRespository : IQuizRepository
             .Project(QuizProjections.ModelToEntityProjection())
             .FirstOrDefaultAsync();
 
-    public async Task InsertAsync(Quiz newQuiz)
+    public async Task<string> InsertAsync(Quiz newQuiz)
     {
         var model = QuizMapper.MapToModel(newQuiz);
         await _quizzes.InsertOneAsync(model);
+        return model.Id!;
     }
 
     public async Task<bool> DeleteAsync(string id)

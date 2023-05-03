@@ -1,7 +1,10 @@
+using Microsoft.AspNetCore.Http.Json;
 using QuizApp.Domain;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure;
+using System.Text.Json.Serialization;
+using MvcJsonOptions = Microsoft.AspNetCore.Mvc.JsonOptions;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -16,6 +19,12 @@ builder.Services
                 builder.AllowAnyHeader();
             });
     })
+    .Configure<JsonOptions>(options =>
+        options.SerializerOptions.Converters.Add(new JsonStringEnumConverter())
+    )
+    .Configure<MvcJsonOptions>(options =>
+        options.JsonSerializerOptions.Converters.Add(new JsonStringEnumConverter())
+    )
     .AddEndpointsApiExplorer()
     .AddSwaggerGen()
     .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
@@ -33,6 +42,7 @@ if (app.Environment.IsDevelopment())
 }
 
 var quizzes = app.MapGroup("/quizzes");
+var users = app.MapGroup("/users");
 
 quizzes.MapGet("/", async (IQuizService service) =>
     await service.GetAsync());
@@ -59,6 +69,33 @@ quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
             : Results.NotFound());
 
 quizzes.MapDelete("/", async (IQuizService service) =>
+{
+    await service.DeleteAsync();
+    return Results.NoContent();
+});
+
+users.MapGet("/", async (IUserService service) =>
+    await service.GetAsync());
+
+users.MapGet("/{id:length(24)}", async (string id, IUserService service) =>
+    await service.GetAsync(id)
+        is User user
+            ? Results.Ok(user)
+            : Results.NotFound());
+
+users.MapPost("/", async (User newUser, IUserService service) =>
+{
+    await service.InsertAsync(newUser);
+    return Results.Created($"/users/{newUser.Id}", newUser);
+});
+
+users.MapDelete("/{id:length(24)}", async (string id, IUserService service) =>
+    await service.DeleteAsync(id)
+        is true
+            ? Results.NoContent()
+            : Results.NotFound());
+
+users.MapDelete("/", async (IUserService service) =>
 {
     await service.DeleteAsync();
     return Results.NoContent();

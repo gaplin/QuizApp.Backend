@@ -9,5 +9,5 @@ public interface IQuizRepository
     Task<List<QuizBase>> GetBaseAsync();
     Task<List<Quiz>> GetAsync();
     Task<Quiz?> GetAsync(string id);
-    Task InsertAsync(Quiz newQuiz);
+    Task<string> InsertAsync(Quiz newQuiz);
 }

@@ -22,6 +22,7 @@ public static class DependencyInjection
         services.AddMongoDatabase(settings!);
         services.AddSingleton<IQuizAppContext, QuizAppContext>();
         services.AddTransient<IQuizRepository, QuizRespository>();
+        services.AddTransient<IUsersRepository, UsersRepository>();
 
         return services;
     }

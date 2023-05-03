@@ -31,8 +31,11 @@ internal class QuizService : IQuizService
         return quiz;
     }
 
-    public async Task InsertAsync(Quiz newQuiz) =>
-        await _repo.InsertAsync(newQuiz);
+    public async Task InsertAsync(Quiz newQuiz)
+    {
+        var id = await _repo.InsertAsync(newQuiz);
+        newQuiz.Id = id;
+    }
 
     public async Task<bool> DeleteAsync(string id) =>
         await _repo.DeleteAsync(id);

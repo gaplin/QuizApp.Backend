@@ -12,6 +12,7 @@ public static class DependencyInjection
     {
         services.AddTransient<IQuizService, QuizService>();
         services.AddTransient<IQuizRandomizer, QuizRandomizer>();
+        services.AddTransient<IUserService, UserService>();
         return services;
     }
 }
