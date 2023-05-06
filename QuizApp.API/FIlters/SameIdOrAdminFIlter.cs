@@ -1,5 +1,4 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
-using QuizApp.Domain.Entities;
+﻿using QuizApp.Domain.Entities;
 using QuizApp.Domain.Enums;
 using System.Security.Claims;
 

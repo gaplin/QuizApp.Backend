@@ -21,14 +21,14 @@ public static class DependencyInjection
             .Bind(configurationSection)
             .ValidateDataAnnotations()
             .ValidateOnStart();
-        
+
         services
             .AddScoped<IClaimsTransformation, AddRoleClaimTransformation>()
             .AddServices()
             .AddValidators();
         return services;
     }
-    private static IServiceCollection AddServices(this IServiceCollection services) 
+    private static IServiceCollection AddServices(this IServiceCollection services)
         => services
             .AddTransient<IQuizService, QuizService>()
             .AddTransient<IQuizRandomizer, QuizRandomizer>()
@@ -44,5 +44,4 @@ public static class DependencyInjection
             .AddScoped<IValidator<CredentialsDTO>, CredentialsDTOValidator>()
             .AddScoped<IValidator<CreateUserDTO>, CreateUserDTOValidator>(); ;
     }
-
 }

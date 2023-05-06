@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.IdentityModel.JsonWebTokens;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Repositories;
 using System.Security.Claims;

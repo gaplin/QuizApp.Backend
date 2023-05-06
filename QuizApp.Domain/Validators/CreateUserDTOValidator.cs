@@ -35,6 +35,4 @@ public class CreateUserDTOValidator : AbstractValidator<CreateUserDTO>
         var user = await _usersRepository.GetByLoginAsync(login);
         return user is null;
     }
-
-
 }

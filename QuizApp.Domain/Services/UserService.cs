@@ -41,16 +41,16 @@ internal class UserService : IUserService
     public async Task<IDictionary<string, string[]>?> CreateAsync(CreateUserDTO user)
     {
         var validationResult = await _createUserValidator.ValidateAsync(user);
-        if(!validationResult.IsValid)
+        if (!validationResult.IsValid)
         {
             return validationResult.ToDictionary();
         }
-        var passwordHash = _hashService.PasswordHash(user.Password);
+        var passwordHash = _hashService.PasswordHash(user.Password!);
         var userEntity = new User
         {
             HPassword = passwordHash,
-            Login = user.Login,
-            UserName = user.UserName,
+            Login = user.Login!,
+            UserName = user.UserName!,
             UserType = EUserType.User
         };
         _ = await _repo.InsertAsync(userEntity);
