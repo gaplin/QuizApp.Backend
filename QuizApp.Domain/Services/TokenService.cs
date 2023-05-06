@@ -28,13 +28,10 @@ internal class TokenService : ITokenService
         {
             Subject = new ClaimsIdentity(new[]
             {
-                new Claim("Id", Guid.NewGuid().ToString()),
-                new Claim(JwtRegisteredClaimNames.Sub, user.UserName),
-                new Claim(JwtRegisteredClaimNames.Email, user.UserName),
-                new Claim("Role", user.UserType.ToString()),
-                new Claim(JwtRegisteredClaimNames.Jti,
-                Guid.NewGuid().ToString())
-             }),
+                new Claim(nameof(user.Id), user.Id!),
+                new Claim(JwtRegisteredClaimNames.Sub, user.Login),
+                new Claim(JwtRegisteredClaimNames.Name, user.UserName),
+            }),
             Expires = DateTime.UtcNow.AddHours(6),
             Issuer = issuer,
             Audience = audience,

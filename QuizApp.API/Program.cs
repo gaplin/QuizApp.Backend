@@ -1,10 +1,12 @@
 using Microsoft.AspNetCore.Authentication.JwtBearer;
-using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http.Json;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi.Models;
+using QuizApp.API.FIlters;
 using QuizApp.Domain;
+using QuizApp.Domain.DTOs;
 using QuizApp.Domain.Entities;
+using QuizApp.Domain.Enums;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure;
 using System.Security.Claims;
@@ -62,6 +64,7 @@ builder.Services
             }
         });
     })
+    .AddMemoryCache()
     .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
     .AddDomain(builder.Configuration.GetSection("Jwt"));
 
@@ -82,8 +85,11 @@ builder.Services
         };
     });
 
-builder.Services.AddAuthorization(options =>
-    options.FallbackPolicy = options.DefaultPolicy);
+builder.Services.AddAuthorizationBuilder()
+    .AddPolicy("Admin", policy =>
+        policy.RequireRole("Admin"))
+    .AddDefaultPolicy("RolePresent", policy =>
+        policy.RequireClaim(ClaimTypes.Role));
 
 var app = builder.Build();
 
@@ -95,6 +101,7 @@ if (app.Environment.IsDevelopment())
         .UseSwagger()
         .UseSwaggerUI();
 }
+app.UseAuthentication();
 app.UseAuthorization();
 
 var quizzes = app.MapGroup("/quizzes");
@@ -116,50 +123,69 @@ quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service) =>
 {
     await service.InsertAsync(newQuiz);
     return Results.Created($"/quizzes/{newQuiz.Id}", newQuiz);
-});
+}).RequireAuthorization();
 
 quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
     await service.DeleteAsync(id)
         is true
             ? Results.NoContent()
-            : Results.NotFound());
+            : Results.NotFound()).RequireAuthorization("Admin");
 
 quizzes.MapDelete("/", async (IQuizService service) =>
 {
     await service.DeleteAsync();
     return Results.NoContent();
-});
+}).RequireAuthorization("Admin");
 
 users.MapGet("/", async (IUserService service) =>
-    await service.GetAsync());
+    await service.GetAsync())
+    .RequireAuthorization("Admin");
 
 users.MapGet("/{id:length(24)}", async (string id, IUserService service) =>
-    await service.GetAsync(id)
-        is User user
+    await service.GetByIdAsync(id)
+        is UserDTO user
             ? Results.Ok(user)
-            : Results.NotFound());
+            : Results.NotFound())
+            .RequireAuthorization()
+            .AddEndpointFilter<SameIdOrAdminFIlter>();
 
-users.MapPost("/", async (User newUser, IUserService service) =>
+users.MapGet("/{id:length(24)}/role", async (string id, IUserService service) =>
+    await service.GetUserRoleAsync(id)
+        is EUserType role
+            ? Results.Ok(role)
+            : Results.NotFound())
+            .RequireAuthorization()
+            .AddEndpointFilter<SameIdOrAdminFIlter>();
+
+users.MapPost("/", async (CreateUserDTO newUser, IUserService service) =>
 {
-    await service.InsertAsync(newUser);
-    return Results.Created($"/users/{newUser.Id}", newUser);
+    var errors = await service.CreateAsync(newUser);
+    if (errors is null)
+    {
+        return Results.Ok();
+    }
+    return Results.ValidationProblem(errors);
 });
 
 users.MapDelete("/{id:length(24)}", async (string id, IUserService service) =>
     await service.DeleteAsync(id)
         is true
             ? Results.NoContent()
-            : Results.NotFound());
+            : Results.NotFound())
+            .RequireAuthorization()
+            .AddEndpointFilter<SameIdOrAdminFIlter>();
 
 users.MapDelete("/", async (IUserService service) =>
 {
     await service.DeleteAsync();
     return Results.NoContent();
-});
+}).RequireAuthorization("Admin");
 
-app.MapPost("/login", [AllowAnonymous] (ILoginService service, ClaimsPrincipal user) =>
+app.MapPost("/login", async (CredentialsDTO credentials, ILoginService service) =>
 {
-    return Results.Ok(service.LogInAndGetToken());
+    var (token, errors) = await service.LogInAndGetTokenAsync(credentials);
+    if (errors is null) return Results.Ok(token!);
+    return Results.ValidationProblem(errors);
 });
 
 app.Run();

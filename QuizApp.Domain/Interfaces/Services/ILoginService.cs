@@ -1,6 +1,8 @@
-﻿namespace QuizApp.Domain.Interfaces.Services;
+﻿using QuizApp.Domain.DTOs;
+
+namespace QuizApp.Domain.Interfaces.Services;
 
 public interface ILoginService
 {
-    string? LogInAndGetToken();
+    Task<(string? token, IDictionary<string, string[]>? validationErrors)> LogInAndGetTokenAsync(CredentialsDTO credentials);
 }
