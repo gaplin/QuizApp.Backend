@@ -9,6 +9,6 @@ public interface IUserService
     Task DeleteAsync();
     Task<IEnumerable<UserDTO>> GetAsync();
     Task<UserDTO?> GetByIdAsync(string id);
-    Task<IDictionary<string, string[]>?> CreateAsync(CreateUserDTO user);
+    Task<(string? token, IDictionary<string, string[]>? errors)> CreateAsync(CreateUserDTO user);
     Task<EUserType?> GetUserRoleAsync(string id);
 }

@@ -159,10 +159,10 @@ users.MapGet("/{id:length(24)}/role", async (string id, IUserService service) =>
 
 users.MapPost("/", async (CreateUserDTO newUser, IUserService service) =>
 {
-    var errors = await service.CreateAsync(newUser);
+    var (token, errors) = await service.CreateAsync(newUser);
     if (errors is null)
     {
-        return Results.Ok();
+        return Results.Ok(token);
     }
     return Results.ValidationProblem(errors);
 });
