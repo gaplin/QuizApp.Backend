@@ -11,6 +11,7 @@ internal static class QuizProjections
         {
             Id = model.Id,
             Author = model.Author,
+            AuthorId = model.AuthorId,
             Category = model.Category,
             Title = model.Title,
             NumberOfQuestions = model.Questions.Count,
@@ -21,6 +22,7 @@ internal static class QuizProjections
         {
             Id = model.Id,
             Author = model.Author,
+            AuthorId = model.AuthorId,
             Category = model.Category,
             Title = model.Title,
             NumberOfQuestions = model.Questions.Count,

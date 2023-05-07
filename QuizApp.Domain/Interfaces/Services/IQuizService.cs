@@ -1,4 +1,5 @@
 ﻿using QuizApp.Domain.Entities;
+using System.Security.Claims;
 
 namespace QuizApp.Domain.Interfaces.Services;
 
@@ -9,5 +10,5 @@ public interface IQuizService
     Task<List<QuizBase>> GetBaseInfoAsync();
     Task<List<Quiz>> GetAsync();
     Task<Quiz?> GetAsync(string id, bool shuffle);
-    Task InsertAsync(Quiz newQuiz);
+    Task InsertAsync(Quiz newQuiz, ClaimsPrincipal claims);
 }

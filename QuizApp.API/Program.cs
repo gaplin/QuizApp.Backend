@@ -119,9 +119,9 @@ quizzes.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService 
             ? Results.Ok(quiz)
             : Results.NotFound());
 
-quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service) =>
+quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service, ClaimsPrincipal claims) =>
 {
-    await service.InsertAsync(newQuiz);
+    await service.InsertAsync(newQuiz, claims);
     return Results.Created($"/quizzes/{newQuiz.Id}", newQuiz);
 }).RequireAuthorization();
 

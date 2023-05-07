@@ -1,7 +1,9 @@
-﻿using QuizApp.Domain.Entities;
+﻿using Microsoft.IdentityModel.JsonWebTokens;
+using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Randomizers;
 using QuizApp.Domain.Interfaces.Repositories;
 using QuizApp.Domain.Interfaces.Services;
+using System.Security.Claims;
 
 namespace QuizApp.Domain.Services;
 
@@ -31,8 +33,17 @@ internal class QuizService : IQuizService
         return quiz;
     }
 
-    public async Task InsertAsync(Quiz newQuiz)
+    public async Task InsertAsync(Quiz newQuiz, ClaimsPrincipal claims)
     {
+        var idClaim = claims.FindFirst(nameof(User.Id));
+        var nameClaim = claims.FindFirst(JwtRegisteredClaimNames.Name);
+
+        var creatorId = idClaim!.Value;
+        var creatorName = nameClaim!.Value;
+
+        newQuiz.Author = creatorName;
+        newQuiz.AuthorId = creatorId;
+
         var id = await _repo.InsertAsync(newQuiz);
         newQuiz.Id = id;
     }

@@ -11,5 +11,6 @@ internal class QuizModel
     public string Title { get; set; } = null!;
     public string Category { get; set; } = null!;
     public string Author { get; set; } = null!;
+    public string AuthorId { get; set; } = null!;
     public List<QuestionModel> Questions { get; set; } = null!;
 }
