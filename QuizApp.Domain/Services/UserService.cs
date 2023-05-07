@@ -55,7 +55,8 @@ internal class UserService : IUserService
             UserName = user.UserName!,
             UserType = EUserType.User
         };
-        _ = await _repo.InsertAsync(userEntity);
+        var id = await _repo.InsertAsync(userEntity);
+        userEntity.Id = id;
 
         var token = _tokenService.GenerateTokenForUser(userEntity);
 
