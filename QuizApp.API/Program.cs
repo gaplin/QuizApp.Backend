@@ -119,10 +119,14 @@ quizzes.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService 
             ? Results.Ok(quiz)
             : Results.NotFound());
 
-quizzes.MapPost("/", async (Quiz newQuiz, IQuizService service, ClaimsPrincipal claims) =>
+quizzes.MapPost("/", async (CreateQuizDTO newQuiz, IQuizService service, ClaimsPrincipal claims) =>
 {
-    await service.InsertAsync(newQuiz, claims);
-    return Results.Created($"/quizzes/{newQuiz.Id}", newQuiz);
+    var validationErrors = await service.InsertAsync(newQuiz, claims);
+    if (validationErrors is null)
+    {
+        return Results.Ok();
+    }
+    return Results.ValidationProblem(validationErrors);
 }).RequireAuthorization();
 
 quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>

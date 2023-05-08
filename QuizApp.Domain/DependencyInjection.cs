@@ -42,6 +42,8 @@ public static class DependencyInjection
         ValidatorOptions.Global.LanguageManager.Enabled = false;
         return services
             .AddScoped<IValidator<CredentialsDTO>, CredentialsDTOValidator>()
-            .AddScoped<IValidator<CreateUserDTO>, CreateUserDTOValidator>(); ;
+            .AddScoped<IValidator<CreateUserDTO>, CreateUserDTOValidator>()
+            .AddScoped<IValidator<CreateQuestionDTO>, CreateQuestionDTOValidator>()
+            .AddScoped<IValidator<CreateQuizDTO>, CreateQuizDTOValidator>();
     }
 }

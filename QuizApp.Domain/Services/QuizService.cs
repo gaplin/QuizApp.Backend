@@ -1,8 +1,11 @@
-﻿using Microsoft.IdentityModel.JsonWebTokens;
+﻿using FluentValidation;
+using Microsoft.IdentityModel.JsonWebTokens;
+using QuizApp.Domain.DTOs;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Randomizers;
 using QuizApp.Domain.Interfaces.Repositories;
 using QuizApp.Domain.Interfaces.Services;
+using QuizApp.Domain.Mappers;
 using System.Security.Claims;
 
 namespace QuizApp.Domain.Services;
@@ -11,11 +14,14 @@ internal class QuizService : IQuizService
 {
     private readonly IQuizRepository _repo;
     private readonly IQuizRandomizer _quizRandomizer;
+    private readonly IValidator<CreateQuizDTO> _createQuizValidator;
 
-    public QuizService(IQuizRepository repo, IQuizRandomizer quizRandomizer)
+    public QuizService(IQuizRepository repo, IQuizRandomizer quizRandomizer,
+        IValidator<CreateQuizDTO> createQuizValidator)
     {
         _repo = repo;
         _quizRandomizer = quizRandomizer;
+        _createQuizValidator = createQuizValidator;
     }
 
     public async Task<List<QuizBase>> GetBaseInfoAsync() =>
@@ -33,19 +39,26 @@ internal class QuizService : IQuizService
         return quiz;
     }
 
-    public async Task InsertAsync(Quiz newQuiz, ClaimsPrincipal claims)
+    public async Task<IDictionary<string, string[]>?> InsertAsync(CreateQuizDTO newQuiz, ClaimsPrincipal claims)
     {
+        var validationResult = await _createQuizValidator.ValidateAsync(newQuiz);
+        if (!validationResult.IsValid)
+        {
+            return validationResult.ToDictionary();
+        }
+        var quizEntity = QuizMapper.MapToEntity(newQuiz);
         var idClaim = claims.FindFirst(nameof(User.Id));
         var nameClaim = claims.FindFirst(JwtRegisteredClaimNames.Name);
 
         var creatorId = idClaim!.Value;
         var creatorName = nameClaim!.Value;
 
-        newQuiz.Author = creatorName;
-        newQuiz.AuthorId = creatorId;
+        quizEntity.Author = creatorName;
+        quizEntity.AuthorId = creatorId;
 
-        var id = await _repo.InsertAsync(newQuiz);
-        newQuiz.Id = id;
+        _ = await _repo.InsertAsync(quizEntity);
+
+        return null;
     }
 
     public async Task<bool> DeleteAsync(string id) =>

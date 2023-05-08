@@ -4,7 +4,7 @@ using QuizApp.Domain.Interfaces.Repositories;
 
 namespace QuizApp.Domain.Validators;
 
-public class CreateUserDTOValidator : AbstractValidator<CreateUserDTO>
+internal class CreateUserDTOValidator : AbstractValidator<CreateUserDTO>
 {
     private readonly IUsersRepository _usersRepository;
     public CreateUserDTOValidator(IUsersRepository usersRepository)
