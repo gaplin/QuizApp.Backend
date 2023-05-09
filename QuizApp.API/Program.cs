@@ -129,11 +129,13 @@ quizzes.MapPost("/", async (CreateQuizDTO newQuiz, IQuizService service, ClaimsP
     return Results.ValidationProblem(validationErrors);
 }).RequireAuthorization();
 
-quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service) =>
-    await service.DeleteAsync(id)
-        is true
-            ? Results.NoContent()
-            : Results.NotFound()).RequireAuthorization("Admin");
+quizzes.MapDelete("/{id:length(24)}", async (string id, IQuizService service, ClaimsPrincipal claims) =>
+{
+    var (forbidden, notFound) = await service.DeleteAsync(id, claims);
+    if (forbidden) return Results.Forbid();
+    if (notFound) return Results.NotFound();
+    return Results.NoContent();
+}).RequireAuthorization();
 
 quizzes.MapDelete("/", async (IQuizService service) =>
 {

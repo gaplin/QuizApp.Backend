@@ -6,7 +6,7 @@ namespace QuizApp.Domain.Interfaces.Services;
 
 public interface IQuizService
 {
-    Task<bool> DeleteAsync(string id);
+    Task<(bool forbidden, bool notFound)> DeleteAsync(string id, ClaimsPrincipal claims);
     Task DeleteAsync();
     Task<List<QuizBase>> GetBaseInfoAsync();
     Task<List<Quiz>> GetAsync();

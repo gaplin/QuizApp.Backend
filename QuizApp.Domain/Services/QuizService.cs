@@ -2,6 +2,7 @@
 using Microsoft.IdentityModel.JsonWebTokens;
 using QuizApp.Domain.DTOs;
 using QuizApp.Domain.Entities;
+using QuizApp.Domain.Enums;
 using QuizApp.Domain.Interfaces.Randomizers;
 using QuizApp.Domain.Interfaces.Repositories;
 using QuizApp.Domain.Interfaces.Services;
@@ -61,8 +62,22 @@ internal class QuizService : IQuizService
         return null;
     }
 
-    public async Task<bool> DeleteAsync(string id) =>
-        await _repo.DeleteAsync(id);
+    public async Task<(bool forbidden, bool notFound)> DeleteAsync(string id, ClaimsPrincipal claims)
+    {
+        var quiz = await _repo.GetAsync(id);
+        if (quiz is null)
+        {
+            return (false, true);
+        }
+        var userId = claims.FindFirst(nameof(User.Id))!.Value;
+        var userType = Enum.Parse<EUserType>(claims.FindFirst(ClaimTypes.Role)!.Value);
+        if (userType == EUserType.Admin || userId == quiz.AuthorId)
+        {
+            _ = await _repo.DeleteAsync(id);
+            return (false, false);
+        }
+        return (true, false);
+    }
 
     public async Task DeleteAsync() =>
         await _repo.DeleteAsync();
