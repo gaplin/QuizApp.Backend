@@ -2,7 +2,7 @@
 ASP.NET Core Minimal Api.
 
 ## Requirements
-- .NET7
+- .NET8
 - MongoDB connection
   - Configuration in appsettings
 
