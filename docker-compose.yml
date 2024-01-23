@@ -1,0 +1,14 @@
+version: '3.4'
+
+services:
+  quizapp.api:
+    image: ${DOCKER_REGISTRY-}quizappapi
+    environment:
+      - QuizAppDatabase__ConnectionString=mongodb://quizDB
+    build:
+      context: .
+      dockerfile: QuizApp.API/Dockerfile
+
+  quizapp.db:
+    container_name: quizDB
+    image: mongo:6.0.13
