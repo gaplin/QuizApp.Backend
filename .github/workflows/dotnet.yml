@@ -21,8 +21,8 @@ jobs:
       with:
         dotnet-version: 8.x
     - name: Restore dependencies
-      run: dotnet restore
+      run: dotnet restore QuizApp.Backend.sln
     - name: Build
-      run: dotnet build --no-restore
+      run: dotnet build QuizApp.Backend.sln --no-restore
     - name: Test
-      run: dotnet test --no-build --verbosity normal
+      run: dotnet test QuizApp.Backend.sln --no-build --verbosity normal
