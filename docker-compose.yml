@@ -11,4 +11,11 @@ services:
 
   quizapp.db:
     container_name: quizDB
+    ports:
+      - 27017:27017
     image: mongo:6.0.13
+    volumes:
+      - quizapp_mongodb:/etc/mongo
+
+volumes:
+  quizapp_mongodb:
