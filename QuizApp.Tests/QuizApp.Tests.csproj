@@ -32,8 +32,4 @@
     <ProjectReference Include="..\QuizApp.Infrastructure\QuizApp.Infrastructure.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Users\" />
-  </ItemGroup>
-
 </Project>
