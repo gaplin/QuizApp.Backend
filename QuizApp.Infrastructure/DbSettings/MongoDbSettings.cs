@@ -5,9 +5,9 @@ namespace QuizApp.Infrastructure.DbSettings;
 internal class MongoDbSettings
 {
     [Required]
-    public string ConnectionString { get; init; } = null!;
+    public string ConnectionString { get; set; } = null!;
     [Required]
-    public string DatabaseName { get; init; } = null!;
+    public string DatabaseName { get; set; } = null!;
     [Required]
-    public CollectionNamesSettings Collections { get; init; } = null!;
+    public CollectionNamesSettings Collections { get; set; } = null!;
 }
