@@ -30,4 +30,5 @@ jobs:
     - name: Publish coverage report to coveralls.io     
       uses: coverallsapp/github-action@v2.2.3 
       with:
+        file: QuizApi.Tests/TestResults/coverage.info
         github-token: ${{ secrets.GITHUB_TOKEN }} 
