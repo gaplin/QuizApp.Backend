@@ -28,17 +28,14 @@ internal class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByIdAsync(string id)
     {
-        var user = await _memoryCache.GetOrCreateAsync(
-            $"userById_{id}",
-            cacheEntry =>
-            {
-                cacheEntry.SlidingExpiration = TimeSpan.FromSeconds(5);
-                return _users
-                        .Find(x => x.Id == id)
-                        .FirstOrDefaultAsync();
-            });
-        if (user != null)
+        var key = $"userById_{id}";
+        var user = _memoryCache.Get<UserModel>(key);
+        user ??= await _users
+                .Find(x => x.Id == id)
+                .SingleOrDefaultAsync();
+        if (user is not null)
         {
+            _memoryCache.Set(key, user, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromSeconds(5) });
             return UserMapper.MapToEntity(user);
         }
         return null;
@@ -46,17 +43,14 @@ internal class UsersRepository : IUsersRepository
 
     public async Task<User?> GetByLoginAsync(string login)
     {
-        var user = await _memoryCache.GetOrCreateAsync(
-            $"userByLogin_{login}",
-            cacheEntry =>
-            {
-                cacheEntry.SlidingExpiration = TimeSpan.FromSeconds(5);
-                return _users
-                        .Find(x => x.Login == login)
-                        .FirstOrDefaultAsync();
-            });
-        if (user != null)
+        var key = $"userByLogin_{login}";
+        var user = _memoryCache.Get<UserModel>(key);
+        user ??= await _users
+                .Find(x => x.Login == login)
+                .SingleOrDefaultAsync();
+        if (user is not null)
         {
+            _memoryCache.Set(key, user, new MemoryCacheEntryOptions { SlidingExpiration = TimeSpan.FromSeconds(5) });
             return UserMapper.MapToEntity(user);
         }
         return null;

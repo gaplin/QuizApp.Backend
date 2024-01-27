@@ -1,17 +1,23 @@
-﻿using QuizApp.Domain.DTOs;
+﻿using Microsoft.Extensions.Caching.Memory;
+using Microsoft.Extensions.DependencyInjection;
+using QuizApp.Domain.DTOs;
+using QuizApp.Infrastructure.Interfaces;
 using QuizApp.Tests.Fixtures;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
+using MongoDB.Driver;
 
 namespace QuizApp.Tests.Users;
 
-public sealed class UserCreationTests : IClassFixture<QuizApiFixture>, IDisposable
+public sealed class UserCreationTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
 {
     private readonly HttpClient _client;
+    private readonly IServiceProvider _serviceProvider;
 
     public UserCreationTests(QuizApiFixture fixture, ITestOutputHelper outputHelper)
     {
         fixture.OutputHelper = outputHelper;
+        _serviceProvider = fixture.Services;
         _client = fixture.CreateClient();
     }
 
@@ -19,15 +25,15 @@ public sealed class UserCreationTests : IClassFixture<QuizApiFixture>, IDisposab
     public async Task User_GetsToken_AfterCreation()
     {
         // Arrange
-        var credentials = new CreateUserDTO
+        var createDto = new CreateUserDTO
         {
-            Login = "lkjljlhk",
-            Password = "lkjljlhk",
-            UserName = "lkjljlhk"
+            Login = Path.GetRandomFileName(),
+            Password = Path.GetRandomFileName(),
+            UserName = Path.GetRandomFileName()
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/users", credentials);
+        using var response = await _client.PostAsJsonAsync("/users", createDto);
 
         // Assert
         response.Should().BeSuccessful();
@@ -35,9 +41,48 @@ public sealed class UserCreationTests : IClassFixture<QuizApiFixture>, IDisposab
         body.Should().NotBeNullOrWhiteSpace();
     }
 
-    public void Dispose()
+    [Fact]
+    public async Task User_CanLogin_AfterCreation()
     {
-        _client.Dispose();
-        GC.SuppressFinalize(this);
+        // Arrange
+        var createDto = new CreateUserDTO
+        {
+            Login = Path.GetRandomFileName(),
+            Password = Path.GetRandomFileName(),
+            UserName = Path.GetRandomFileName()
+        };
+        using var createResponse = await _client.PostAsJsonAsync("/users", createDto);
+        createResponse.EnsureSuccessStatusCode();
+        var credentials = new CreateUserDTO
+        {
+            Login = createDto.Login,
+            Password = createDto.Password,
+            UserName = createDto.UserName
+        };
+
+        // Act
+        using var response = await _client.PostAsJsonAsync("/login", credentials);
+
+        // Assert
+        response.Should().BeSuccessful();
+        var body = await response.Content.ReadAsStringAsync();
+        body.Should().NotBeNullOrWhiteSpace();
+    }
+
+    public Task InitializeAsync()
+    {
+        return Task.CompletedTask;
+    }
+
+    public async Task DisposeAsync()
+    {
+        using var scope = _serviceProvider.CreateAsyncScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
+        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
+        var users = db.Users;
+
+        await users.DeleteManyAsync(_ => true);
+        cache.Clear();
     }
 }
