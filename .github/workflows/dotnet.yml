@@ -31,4 +31,4 @@ jobs:
       uses: coverallsapp/github-action@v2.2.3 
       with:
         github-token: ${{ secrets.GITHUB_TOKEN }} 
-        path-to-lcov: QuizApp.Tests/TestResults/coverage.info 
+        path-to-lcov: TestResults/coverage.info 
