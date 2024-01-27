@@ -1,15 +1,14 @@
-﻿using Microsoft.Extensions.Caching.Memory;
+﻿using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Caching.Memory;
 using Microsoft.Extensions.DependencyInjection;
+using MongoDB.Driver;
 using QuizApp.Domain.DTOs;
+using QuizApp.Infrastructure.DbModels;
 using QuizApp.Infrastructure.Interfaces;
 using QuizApp.Tests.Fixtures;
+using System.Net;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
-using MongoDB.Driver;
-using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Mappers;
-using System.Net;
-using Microsoft.AspNetCore.Http;
 
 namespace QuizApp.Tests.Users;
 
@@ -63,6 +62,27 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         response.Should().BeSuccessful();
         var body = await response.Content.ReadAsStringAsync();
         body.Should().NotBeNullOrWhiteSpace();
+    }
+
+    [Fact]
+    public async Task UserWithProvidedData_IsCreated()
+    {
+        // Arrange
+        var createDto = new CreateUserDTO
+        {
+            Login = Path.GetRandomFileName(),
+            Password = Path.GetRandomFileName(),
+            UserName = Path.GetRandomFileName()
+        };
+
+        // Act
+        using var response = await _client.PostAsJsonAsync("/users", createDto);
+
+        // Assert
+        response.Should().BeSuccessful();
+        var allUsers = await GetAllUsersAsync();
+        allUsers.Should().HaveCount(1);
+        allUsers[0].Should().BeEquivalentTo(createDto, opts => opts.ExcludingMissingMembers());
     }
 
     [Fact]
@@ -135,6 +155,18 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
         var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
         problemDetails!.Errors["Login,Password"].Should().Contain("Invalid Login or Password");
+    }
+
+    private async Task<List<UserModel>> GetAllUsersAsync()
+    {
+        using var scope = _serviceProvider.CreateAsyncScope();
+
+        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
+        var usersCollection = db.Users;
+
+        var users = await usersCollection.Find(_ => true).ToListAsync();
+
+        return users;
     }
 
     public Task InitializeAsync()

@@ -13,14 +13,14 @@ using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
-public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
+public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
 {
     private User _user = null!; // initialized in InitializeAsync
     private string _token = null!; // initialized in InitializeAsync
     private readonly IServiceProvider _serviceProvider;
     private readonly HttpClient _client;
 
-    public NormalUserCommandsTests(QuizApiFixture fixture, ITestOutputHelper outputHelper)
+    public AdminUserCommandsTests(QuizApiFixture fixture, ITestOutputHelper outputHelper)
     {
         fixture.OutputHelper = outputHelper;
         _client = fixture.CreateClient();
@@ -28,43 +28,40 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
     }
 
     [Fact]
-    public async Task DeletingAllUsers_WithAuthHeader_ReturnsForbidden()
+    public async Task DeletingAllUsers_WithAuthHeader_ReturnsNoContentAndDeletesAllUsers()
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        _ = await CreateRandomUser(EUserTypeModel.Admin);
 
         // Act
         using var response = await _client.DeleteAsync("/users");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var allUsers = await GetAllUsersAsync();
+        allUsers.Should().BeEmpty();
     }
 
     [Fact]
-    public async Task DeletingAllUsers_WithoutAuthHeader_ReturnsUnathorized()
-    {
-        // Act
-        using var response = await _client.DeleteAsync("/users");
-
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
-    }
-
-    [Fact]
-    public async Task DeleteById_WithoutAuthHeader_ReturnsUnathorized()
+    public async Task DeleteById_DifferentUser_ReturnsNoContentAndDeletesUser()
     {
         // Arrange
-        var param = _user.Id;
+        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
+        var userToDelete = await CreateRandomUser(EUserTypeModel.User);
+        var param = userToDelete.Id;
 
         // Act
         using var response = await _client.DeleteAsync($"/users/{param}");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
+        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
+        var allUsers = await GetAllUsersAsync();
+        allUsers.Should().NotContain(x => x.Id == userToDelete.Id);
     }
 
     [Fact]
-    public async Task DeleteById_DifferentUser_ReturnsForbidden()
+    public async Task DeleteById_NotExistingUser_ReturnsNotFound()
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
@@ -74,23 +71,26 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         using var response = await _client.DeleteAsync($"/users/{param}");
 
         // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
+        response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    [Fact]
-    public async Task DeleteById_SameUser_ReturnsNoContentAndDeletesUser()
+    private async Task<User> CreateRandomUser(EUserTypeModel userType)
     {
-        // Arrange
-        _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        var param = _user.Id;
+        var userModel = new UserModel
+        {
+            HPassword = Path.GetRandomFileName(),
+            Login = Path.GetRandomFileName(),
+            UserName = Path.GetRandomFileName(),
+            UserType = userType
+        };
+        using var scope = _serviceProvider.CreateAsyncScope();
 
-        // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
+        var users = db.Users;
 
-        // Assert
-        response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var allUsers = await GetAllUsersAsync();
-        allUsers.Should().NotContain(x => x.Id == _user.Id);
+        await users.InsertOneAsync(userModel);
+        var user = UserMapper.MapToEntity(userModel);
+        return user;
     }
 
     private async Task<List<UserModel>> GetAllUsersAsync()
@@ -116,23 +116,11 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         await users.DeleteManyAsync(_ => true);
         cache.Clear();
     }
+
     public async Task InitializeAsync()
     {
+        _user = await CreateRandomUser(EUserTypeModel.Admin);
         using var scope = _serviceProvider.CreateAsyncScope();
-
-        var userModel = new UserModel
-        {
-            HPassword = Path.GetRandomFileName(),
-            Login = Path.GetRandomFileName(),
-            UserName = Path.GetRandomFileName(),
-            UserType = EUserTypeModel.User
-        };
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var users = db.Users;
-
-        await users.InsertOneAsync(userModel);
-        _user = UserMapper.MapToEntity(userModel);
 
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         _token = tokenService.GenerateTokenForUser(_user);
