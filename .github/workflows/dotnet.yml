@@ -25,4 +25,4 @@ jobs:
     - name: Build
       run: dotnet build QuizApp.Backend.sln --no-restore
     - name: Test
-      run: dotnet test QuizApp.Backend.sln --no-build --verbosity normal
+      run: dotnet test QuizApp.Backend.sln --no-build --verbosity normal /p:CollectCoverage=true
