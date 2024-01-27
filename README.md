@@ -1,4 +1,8 @@
 # QuizApp.Backend
+[![.NET](https://github.com/gaplin/QuizApp.Backend/actions/workflows/dotnet.yml/badge.svg)](https://github.com/gaplin/QuizApp.Backend/actions/workflows/dotnet.yml)
+[![Coverage Status](https://coveralls.io/repos/github/gaplin/QuizApp.Backend/badge.svg)](https://coveralls.io/github/gaplin/QuizApp.Backend)
+
+
 ASP.NET Core Minimal Api.
 
 ## Requirements
