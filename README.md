@@ -7,8 +7,7 @@ ASP.NET Core Minimal Api.
 
 ## Requirements
 - .NET8
-- MongoDB connection
-  - Configuration in appsettings
+- MongoDB connection (configuration in appsettings) *or* docker if using included docker-compose
 
 ## Features
 - JWT tokens auth/generation
