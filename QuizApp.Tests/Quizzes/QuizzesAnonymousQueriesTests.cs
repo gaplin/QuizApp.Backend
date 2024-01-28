@@ -122,14 +122,13 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
             var sourceQuestion = quiz.Questions.Single(x => x.Text == question.Text);
             question.Answers.Should().BeEquivalentTo(sourceQuestion.Answers);
             question.Answers[question.CorrectAnswer].Should().Be(sourceQuestion.Answers[sourceQuestion.CorrectAnswer]);
-
         });
     }
 
     private async Task<List<QuizModel>> CreateRandomQuizzesAsync(int count)
     {
         var result = new List<QuizModel>();
-        while(count --> 0)
+        while (count-- > 0)
         {
             var quiz = await CreateRandomQuizAsync(Path.GetRandomFileName(), Path.GetRandomFileName(), Random.Shared.Next(1, 5));
             result.Add(quiz);
