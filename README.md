@@ -13,4 +13,4 @@ ASP.NET Core Minimal Api.
 ## Features
 - JWT tokens auth/generation
 - Fluent Validation for DTO's
-- Passwords encrypted using Bcrypt
+- Passwords hashed using Bcrypt
