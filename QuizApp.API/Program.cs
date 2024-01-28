@@ -56,7 +56,7 @@ builder.Services
                         Id = "Bearer"
                     }
                 },
-                Array.Empty<string>()
+                []
             }
         });
     })

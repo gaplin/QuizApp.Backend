@@ -31,7 +31,7 @@ public class UsersEndpoints : CarterModule
             await service.GetUserRoleAsync(id)
                 is EUserType role
                     ? Results.Ok(role)
-                : Results.NotFound())
+                    : Results.NotFound())
             .RequireAuthorization()
             .AddEndpointFilter<SameIdOrAdminFIlter>();
 
