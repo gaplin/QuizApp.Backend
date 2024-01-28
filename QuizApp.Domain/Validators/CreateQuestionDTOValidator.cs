@@ -31,15 +31,15 @@ internal class CreateQuestionDTOValidator : AbstractValidator<CreateQuestionDTO>
 
     private static bool CorrectAnswerValid(CreateQuestionDTO question, int correctAnswer)
     {
-        if (question.Answers?.Count is int questionsCount
-            && (correctAnswer < 0 || correctAnswer > questionsCount - 1))
+        var answersCount = question.Answers!.Count;
+        if (correctAnswer < 0 || correctAnswer > answersCount - 1)
             return false;
         return true;
     }
 
     private static string CorrectAnswerInvalidMessage(CreateQuestionDTO question)
     {
-        var questionsCount = question.Answers!.Count;
-        return $"Value must be between 0 and {questionsCount - 1} inclusive";
+        var answersCount = question.Answers!.Count;
+        return $"Value must be between 0 and {answersCount - 1} inclusive";
     }
 }
