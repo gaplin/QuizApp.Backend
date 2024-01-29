@@ -1,14 +1,11 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
+﻿using Microsoft.Extensions.DependencyInjection;
 using QuizApp.Domain.DTOs;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Enums;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
-using QuizApp.Infrastructure.Mappers;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -145,34 +142,14 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
 
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-        var users = db.Users;
-
-        await users.DeleteManyAsync(_ => true);
-        cache.Clear();
+        await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
     public async Task InitializeAsync()
     {
+        _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
+
         using var scope = _serviceProvider.CreateAsyncScope();
-
-        var userModel = new UserModel
-        {
-            HPassword = Path.GetRandomFileName(),
-            Login = Path.GetRandomFileName(),
-            UserName = Path.GetRandomFileName(),
-            UserType = EUserTypeModel.User
-        };
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var users = db.Users;
-
-        await users.InsertOneAsync(userModel);
-        _user = UserMapper.MapToEntity(userModel);
-
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         _token = tokenService.GenerateTokenForUser(_user);
     }

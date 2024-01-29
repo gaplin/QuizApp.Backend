@@ -1,10 +1,8 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.DependencyInjection;
 using MongoDB.Driver;
 using QuizApp.Domain.Entities;
-using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
@@ -27,7 +25,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
     public async Task GettingAllQuizzes_ReturnsAllQuizzes()
     {
         // Arrange
-        var allQuizzes = await CreateRandomQuizzesAsync(3);
+        var allQuizzes = await DbUtilities.CreateRandomQuizzesAsync(_serviceProvider, 3);
 
         // Act
         using var response = await _client.GetAsync("/quizzes");
@@ -42,7 +40,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
     public async Task GettingBaseInfo_ReturnsBaseInfoForAllQuizzes()
     {
         // Arrrange
-        var allQuizzes = await CreateRandomQuizzesAsync(3);
+        var allQuizzes = await DbUtilities.CreateRandomQuizzesAsync(_serviceProvider, 3);
         var baseInfos = allQuizzes.Select(x => new QuizBase
         {
             Id = x.Id,
@@ -92,7 +90,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
     public async Task GettingById_WithoutShuffle_ReturnsQuizWithQuestionsInTheSameOrder()
     {
         // Arrange
-        var quiz = await CreateRandomQuizAsync("auth", "authId", 10);
+        var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "auth", "authId", 10);
 
         // Act
         using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=false");
@@ -107,7 +105,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
     public async Task GettingById_WithShuffle_ReturnsQuizWithShuffledQuestionsAndAnswers()
     {
         // Arrange
-        var quiz = await CreateRandomQuizAsync("auth", "authId", 10);
+        var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "auth", "authId", 10);
 
         // Act
         using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=true");
@@ -125,55 +123,9 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         });
     }
 
-    private async Task<List<QuizModel>> CreateRandomQuizzesAsync(int count)
-    {
-        var result = new List<QuizModel>();
-        while (count-- > 0)
-        {
-            var quiz = await CreateRandomQuizAsync(Path.GetRandomFileName(), Path.GetRandomFileName(), Random.Shared.Next(1, 5));
-            result.Add(quiz);
-        }
-        return result;
-    }
-
-    private async Task<QuizModel> CreateRandomQuizAsync(string AuthorName, string AuthorId, int numOfQuestions)
-    {
-        var quizModel = new QuizModel
-        {
-            Author = AuthorName,
-            Category = Path.GetRandomFileName(),
-            AuthorId = AuthorId,
-            Title = Path.GetRandomFileName(),
-            Questions = Enumerable.Range(0, numOfQuestions).Select(_ => CreateQuestion(Random.Shared.Next(1, 5))).ToList()
-        };
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = _serviceProvider.GetRequiredService<IQuizAppContext>();
-        var quizzes = db.Quizzes;
-
-        await quizzes.InsertOneAsync(quizModel);
-        return quizModel;
-    }
-
-    private static QuestionModel CreateQuestion(int numOfAnswers)
-    {
-        var question = new QuestionModel
-        {
-            Text = Path.GetRandomFileName(),
-            CorrectAnswer = Random.Shared.Next(0, numOfAnswers - 1),
-            Answers = Enumerable.Range(0, numOfAnswers).Select(_ => Path.GetRandomFileName()).ToList()
-        };
-        return question;
-    }
-
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var quizzes = db.Quizzes;
-
-        await quizzes.DeleteManyAsync(_ => true);
+        await DbUtilities.DeleteAllQuizzesAsync(_serviceProvider);
     }
 
     public Task InitializeAsync()

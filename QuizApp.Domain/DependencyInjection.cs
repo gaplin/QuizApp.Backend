@@ -23,7 +23,7 @@ public static class DependencyInjection
             .ValidateOnStart();
 
         services
-            .AddScoped<IClaimsTransformation, AddRoleClaimTransformation>()
+            .AddTransient<IClaimsTransformation, AddRoleClaimTransformation>()
             .AddServices()
             .AddValidators();
         return services;
@@ -41,9 +41,9 @@ public static class DependencyInjection
     {
         ValidatorOptions.Global.LanguageManager.Enabled = false;
         return services
-            .AddScoped<IValidator<CredentialsDTO>, CredentialsDTOValidator>()
-            .AddScoped<IValidator<CreateUserDTO>, CreateUserDTOValidator>()
-            .AddScoped<IValidator<CreateQuestionDTO>, CreateQuestionDTOValidator>()
-            .AddScoped<IValidator<CreateQuizDTO>, CreateQuizDTOValidator>();
+            .AddTransient<IValidator<CredentialsDTO>, CredentialsDTOValidator>()
+            .AddTransient<IValidator<CreateUserDTO>, CreateUserDTOValidator>()
+            .AddTransient<IValidator<CreateQuestionDTO>, CreateQuestionDTOValidator>()
+            .AddTransient<IValidator<CreateQuizDTO>, CreateQuizDTOValidator>();
     }
 }

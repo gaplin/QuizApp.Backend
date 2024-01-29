@@ -1,11 +1,7 @@
 ﻿using Microsoft.AspNetCore.Http;
-using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
 using QuizApp.Domain.DTOs;
-using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit.Abstractions;
@@ -80,7 +76,7 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
 
         // Assert
         response.Should().BeSuccessful();
-        var allUsers = await GetAllUsersAsync();
+        var allUsers = await DbUtilities.GetAllUsersAsync(_serviceProvider);
         allUsers.Should().HaveCount(1);
         allUsers[0].Should().BeEquivalentTo(createDto, opts => opts.ExcludingMissingMembers());
     }
@@ -157,18 +153,6 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         problemDetails!.Errors["Login,Password"].Should().Contain("Invalid Login or Password");
     }
 
-    private async Task<List<UserModel>> GetAllUsersAsync()
-    {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var usersCollection = db.Users;
-
-        var users = await usersCollection.Find(_ => true).ToListAsync();
-
-        return users;
-    }
-
     public Task InitializeAsync()
     {
         return Task.CompletedTask;
@@ -176,13 +160,6 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
 
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-        var users = db.Users;
-
-        await users.DeleteManyAsync(_ => true);
-        cache.Clear();
+        await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 }

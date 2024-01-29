@@ -1,12 +1,9 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
+﻿using Microsoft.Extensions.DependencyInjection;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
-using QuizApp.Infrastructure.Mappers;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
@@ -32,15 +29,15 @@ public sealed class AdminUserQuizCommandsTests : IClassFixture<QuizApiFixture>, 
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        await CreateRandomQuiz("auth1", "auth1");
-        await CreateRandomQuiz("auth2", "auth2");
+        await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author1", "authorId1", 0);
+        await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author2", "authorId2", 1);
 
         // Act
         using var response = await _client.DeleteAsync($"/quizzes");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var allQuizzes = await GetAllQuizzesAsync();
+        var allQuizzes = await DbUtilities.GetAllQuizzesAsync(_serviceProvider);
         allQuizzes.Should().BeEmpty();
     }
 
@@ -49,85 +46,27 @@ public sealed class AdminUserQuizCommandsTests : IClassFixture<QuizApiFixture>, 
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        var id = await CreateRandomQuiz("author", "authorId");
+        var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author", "authorId", 0);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var allQuizzes = await GetAllQuizzesAsync();
+        var allQuizzes = await DbUtilities.GetAllQuizzesAsync(_serviceProvider);
         allQuizzes.Should().BeEmpty();
-    }
-
-    private async Task<User> CreateRandomUser(EUserTypeModel userType)
-    {
-        var userModel = new UserModel
-        {
-            HPassword = Path.GetRandomFileName(),
-            Login = Path.GetRandomFileName(),
-            UserName = Path.GetRandomFileName(),
-            UserType = userType
-        };
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var users = db.Users;
-
-        await users.InsertOneAsync(userModel);
-        var user = UserMapper.MapToEntity(userModel);
-        return user;
-    }
-
-    private async Task<string> CreateRandomQuiz(string AuthorName, string AuthorId)
-    {
-        var quizModel = new QuizModel
-        {
-            Author = AuthorName,
-            Category = Path.GetRandomFileName(),
-            AuthorId = AuthorId,
-            Title = Path.GetRandomFileName(),
-            Questions = []
-        };
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = _serviceProvider.GetRequiredService<IQuizAppContext>();
-        var quizzes = db.Quizzes;
-
-        await quizzes.InsertOneAsync(quizModel);
-        return quizModel.Id!;
-    }
-
-    private async Task<List<QuizModel>> GetAllQuizzesAsync()
-    {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var quizzes = db.Quizzes;
-
-        var result = await quizzes.Find(_ => true).ToListAsync();
-        return result;
     }
 
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-        var users = db.Users;
-        var quizzes = db.Quizzes;
-
-        await users.DeleteManyAsync(_ => true);
-        await quizzes.DeleteManyAsync(_ => true);
-        cache.Clear();
+        await DbUtilities.DeleteAllAsync(_serviceProvider);
     }
 
     public async Task InitializeAsync()
     {
-        _user = await CreateRandomUser(EUserTypeModel.Admin);
-        using var scope = _serviceProvider.CreateAsyncScope();
+        _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 
+        using var scope = _serviceProvider.CreateAsyncScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         _token = tokenService.GenerateTokenForUser(_user);
     }

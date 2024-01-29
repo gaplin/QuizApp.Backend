@@ -24,11 +24,17 @@ public static class DependencyInjection
             var settings = sp.GetRequiredService<IOptions<MongoDbSettings>>().Value;
             var client = new MongoClient(settings.ConnectionString);
             return client.GetDatabase(settings.DatabaseName);
-        });
+        }
+        ).AddRepositories();
+
+        return services;
+    }
+
+    private static IServiceCollection AddRepositories(this IServiceCollection services)
+    {
         services.AddSingleton<IQuizAppContext, QuizAppContext>();
         services.AddTransient<IQuizRepository, QuizRespository>();
         services.AddTransient<IUsersRepository, UsersRepository>();
-
         return services;
     }
 }

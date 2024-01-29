@@ -1,14 +1,11 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
+﻿using Microsoft.Extensions.DependencyInjection;
 using QuizApp.Domain.DTOs;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Enums;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
-using QuizApp.Infrastructure.Mappers;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
@@ -39,7 +36,12 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        User[] all_users = [_user, await CreateRandomUser(EUserTypeModel.User), await CreateRandomUser(EUserTypeModel.Admin)];
+        User[] all_users =
+            [
+                _user,
+                await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User),
+                await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin)
+            ];
         var expectedResult = all_users.Select(x => new UserDTO { Id = x.Id!, UserName = x.UserName, UserType = x.UserType });
 
         // Act
@@ -56,7 +58,7 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        var userToQuery = await CreateRandomUser(EUserTypeModel.Admin);
+        var userToQuery = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
         var param = userToQuery.Id;
 
         // Act
@@ -101,7 +103,7 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        var userToQuery = await CreateRandomUser(EUserTypeModel.User);
+        var userToQuery = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
         var param = userToQuery.Id;
 
         // Act
@@ -113,42 +115,16 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         role.Should().Be(userToQuery.UserType);
     }
 
-    private async Task<User> CreateRandomUser(EUserTypeModel userType)
-    {
-        var userModel = new UserModel
-        {
-            HPassword = Path.GetRandomFileName(),
-            Login = Path.GetRandomFileName(),
-            UserName = Path.GetRandomFileName(),
-            UserType = userType
-        };
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var users = db.Users;
-
-        await users.InsertOneAsync(userModel);
-        var user = UserMapper.MapToEntity(userModel);
-        return user;
-    }
-
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-        var users = db.Users;
-
-        await users.DeleteManyAsync(_ => true);
-        cache.Clear();
+        await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
     public async Task InitializeAsync()
     {
-        _user = await CreateRandomUser(EUserTypeModel.Admin);
-        using var scope = _serviceProvider.CreateAsyncScope();
+        _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 
+        using var scope = _serviceProvider.CreateAsyncScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         _token = tokenService.GenerateTokenForUser(_user);
     }

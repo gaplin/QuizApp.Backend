@@ -1,12 +1,9 @@
-﻿using Microsoft.Extensions.Caching.Memory;
-using Microsoft.Extensions.DependencyInjection;
-using MongoDB.Driver;
+﻿using Microsoft.Extensions.DependencyInjection;
 using QuizApp.Domain.Entities;
 using QuizApp.Domain.Interfaces.Services;
 using QuizApp.Infrastructure.DbModels;
-using QuizApp.Infrastructure.Interfaces;
-using QuizApp.Infrastructure.Mappers;
 using QuizApp.Tests.Fixtures;
+using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
 using Xunit.Abstractions;
@@ -32,14 +29,14 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        _ = await CreateRandomUser(EUserTypeModel.Admin);
+        _ = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 
         // Act
         using var response = await _client.DeleteAsync("/users");
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var allUsers = await GetAllUsersAsync();
+        var allUsers = await DbUtilities.GetAllUsersAsync(_serviceProvider);
         allUsers.Should().BeEmpty();
     }
 
@@ -48,7 +45,7 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
     {
         // Arrange
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
-        var userToDelete = await CreateRandomUser(EUserTypeModel.User);
+        var userToDelete = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
         var param = userToDelete.Id;
 
         // Act
@@ -56,7 +53,7 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
-        var allUsers = await GetAllUsersAsync();
+        var allUsers = await DbUtilities.GetAllUsersAsync(_serviceProvider);
         allUsers.Should().NotContain(x => x.Id == userToDelete.Id);
     }
 
@@ -74,54 +71,16 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    private async Task<User> CreateRandomUser(EUserTypeModel userType)
-    {
-        var userModel = new UserModel
-        {
-            HPassword = Path.GetRandomFileName(),
-            Login = Path.GetRandomFileName(),
-            UserName = Path.GetRandomFileName(),
-            UserType = userType
-        };
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var users = db.Users;
-
-        await users.InsertOneAsync(userModel);
-        var user = UserMapper.MapToEntity(userModel);
-        return user;
-    }
-
-    private async Task<List<UserModel>> GetAllUsersAsync()
-    {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        var usersCollection = db.Users;
-
-        var users = await usersCollection.Find(_ => true).ToListAsync();
-
-        return users;
-    }
-
     public async Task DisposeAsync()
     {
-        using var scope = _serviceProvider.CreateAsyncScope();
-
-        var db = scope.ServiceProvider.GetRequiredService<IQuizAppContext>();
-        MemoryCache cache = (MemoryCache)scope.ServiceProvider.GetRequiredService<IMemoryCache>();
-        var users = db.Users;
-
-        await users.DeleteManyAsync(_ => true);
-        cache.Clear();
+        await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
     public async Task InitializeAsync()
     {
-        _user = await CreateRandomUser(EUserTypeModel.Admin);
-        using var scope = _serviceProvider.CreateAsyncScope();
+        _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 
+        using var scope = _serviceProvider.CreateAsyncScope();
         var tokenService = scope.ServiceProvider.GetRequiredService<ITokenService>();
         _token = tokenService.GenerateTokenForUser(_user);
     }
