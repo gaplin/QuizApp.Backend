@@ -8,6 +8,7 @@ using QuizApp.Infrastructure;
 using System.Security.Claims;
 using System.Text;
 using System.Text.Json.Serialization;
+using System.Threading.RateLimiting;
 using MvcJsonOptions = Microsoft.AspNetCore.Mvc.JsonOptions;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -63,7 +64,24 @@ builder.Services
     .AddMemoryCache()
     .AddInfrastructure(builder.Configuration.GetSection("QuizAppDatabase"))
     .AddDomain(builder.Configuration.GetSection("Jwt"))
-    .AddCarter();
+    .AddCarter()
+    .AddRateLimiter(options =>
+    {
+        options.RejectionStatusCode = StatusCodes.Status429TooManyRequests;
+
+        options.GlobalLimiter = PartitionedRateLimiter.Create<HttpContext, string>(httpContext =>
+        {
+            var ip = httpContext.Connection.RemoteIpAddress?.ToString() ?? Random.Shared.Next(0, 9).ToString();
+            return RateLimitPartition.GetFixedWindowLimiter(ip, _ => new FixedWindowRateLimiterOptions
+            {
+                PermitLimit = 1000,
+                Window = TimeSpan.FromSeconds(10),
+                QueueLimit = 10,
+                QueueProcessingOrder = QueueProcessingOrder.OldestFirst
+            });
+        });
+    }
+    );
 
 builder.Services
     .AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
@@ -90,6 +108,7 @@ builder.Services.AddAuthorizationBuilder()
 
 var app = builder.Build();
 
+app.UseRateLimiter();
 app.UseCors();
 
 if (app.Environment.IsDevelopment())
