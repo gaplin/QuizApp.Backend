@@ -16,16 +16,22 @@ public class QuizzesEndpoints : CarterModule
     public override void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/", async (IQuizService service) =>
-            await service.GetAsync());
+            await service.GetAsync()
+            )
+            .Produces<List<Quiz>>();
 
         app.MapGet("/baseInfo", async (IQuizService service) =>
-            await service.GetBaseInfoAsync());
+            await service.GetBaseInfoAsync()
+            )
+            .Produces<List<QuizBase>>();
 
         app.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService service) =>
             await service.GetAsync(id, shuffle)
                 is Quiz quiz
                     ? Results.Ok(quiz)
-                    : Results.NotFound());
+                    : Results.NotFound())
+            .Produces<Quiz>()
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/", async (CreateQuizDTO newQuiz, IQuizService service, ClaimsPrincipal claims) =>
         {
@@ -35,7 +41,11 @@ public class QuizzesEndpoints : CarterModule
                 return Results.Ok();
             }
             return Results.ValidationProblem(validationErrors);
-        }).RequireAuthorization();
+        })
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status200OK)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .ProducesValidationProblem();
 
         app.MapDelete("/{id:length(24)}", async (string id, IQuizService service, ClaimsPrincipal claims) =>
         {
@@ -43,12 +53,21 @@ public class QuizzesEndpoints : CarterModule
             if (forbidden) return Results.Forbid();
             if (notFound) return Results.NotFound();
             return Results.NoContent();
-        }).RequireAuthorization();
+        })
+            .RequireAuthorization()
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapDelete("/", async (IQuizService service) =>
         {
             await service.DeleteAsync();
             return Results.NoContent();
-        }).RequireAuthorization("Admin");
+        })
+            .RequireAuthorization("Admin")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
     }
 }

@@ -16,8 +16,12 @@ public class UsersEndpoints : CarterModule
     public override void AddRoutes(IEndpointRouteBuilder app)
     {
         app.MapGet("/", async (IUserService service) =>
-            await service.GetAsync())
-            .RequireAuthorization("Admin");
+            await service.GetAsync()
+            )
+            .RequireAuthorization("Admin")
+            .Produces<UserDTO>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
 
         app.MapGet("/{id:length(24)}", async (string id, IUserService service) =>
             await service.GetByIdAsync(id)
@@ -25,7 +29,11 @@ public class UsersEndpoints : CarterModule
                     ? Results.Ok(user)
                     : Results.NotFound())
             .RequireAuthorization()
-            .AddEndpointFilter<SameIdOrAdminFIlter>();
+            .AddEndpointFilter<SameIdOrAdminFIlter>()
+            .Produces<UserDTO>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapGet("/{id:length(24)}/role", async (string id, IUserService service) =>
             await service.GetUserRoleAsync(id)
@@ -33,7 +41,11 @@ public class UsersEndpoints : CarterModule
                     ? Results.Ok(role)
                     : Results.NotFound())
             .RequireAuthorization()
-            .AddEndpointFilter<SameIdOrAdminFIlter>();
+            .AddEndpointFilter<SameIdOrAdminFIlter>()
+            .Produces<EUserType>()
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapPost("/", async (CreateUserDTO newUser, IUserService service) =>
         {
@@ -43,7 +55,9 @@ public class UsersEndpoints : CarterModule
                 return Results.Ok(token);
             }
             return Results.ValidationProblem(errors);
-        });
+        })
+            .Produces<string>()
+            .ProducesValidationProblem();
 
         app.MapDelete("/{id:length(24)}", async (string id, IUserService service) =>
             await service.DeleteAsync(id)
@@ -51,12 +65,20 @@ public class UsersEndpoints : CarterModule
                     ? Results.NoContent()
                     : Results.NotFound())
             .RequireAuthorization()
-            .AddEndpointFilter<SameIdOrAdminFIlter>();
+            .AddEndpointFilter<SameIdOrAdminFIlter>()
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden)
+            .Produces(StatusCodes.Status404NotFound);
 
         app.MapDelete("/", async (IUserService service) =>
         {
             await service.DeleteAsync();
             return Results.NoContent();
-        }).RequireAuthorization("Admin");
+        })
+            .RequireAuthorization("Admin")
+            .Produces(StatusCodes.Status204NoContent)
+            .Produces(StatusCodes.Status401Unauthorized)
+            .Produces(StatusCodes.Status403Forbidden);
     }
 }

@@ -14,6 +14,9 @@ public class LoginEndpoint : ICarterModule
             if (errors is null) return Results.Ok(token!);
             return Results.ValidationProblem(errors);
         }
-        ).WithTags("Login");
+        )
+            .WithTags("Login")
+            .Produces<string>()
+            .ProducesValidationProblem();
     }
 }
