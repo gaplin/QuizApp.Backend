@@ -26,12 +26,12 @@ internal class TokenService : ITokenService
         (_jwtOptions.Key);
         var tokenDescriptor = new SecurityTokenDescriptor
         {
-            Subject = new ClaimsIdentity(new[]
-            {
+            Subject = new ClaimsIdentity(
+            [
                 new Claim(nameof(user.Id), user.Id!),
                 new Claim(JwtRegisteredClaimNames.Sub, user.Login),
                 new Claim(JwtRegisteredClaimNames.Name, user.UserName),
-            }),
+            ]),
             Expires = DateTime.UtcNow.AddHours(6),
             Issuer = issuer,
             Audience = audience,
