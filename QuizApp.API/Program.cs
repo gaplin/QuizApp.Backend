@@ -85,10 +85,11 @@ var app = builder.Build();
 app.UseRateLimiter();
 app.UseCors();
 
-// Swagger
-app.MapOpenApi();
-app.UseSwaggerUI(opts => opts.SwaggerEndpoint("/openapi/v1.json", "QuizApp.API"));
-
+if (!app.Environment.IsProduction())
+{
+    app.MapOpenApi();
+    app.UseSwaggerUI(opts => opts.SwaggerEndpoint("/openapi/v1.json", "QuizApp.API"));
+}
 app.UseAuthentication();
 app.UseAuthorization();
 
