@@ -15,7 +15,7 @@
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
     </PackageReference>
     <PackageReference Include="FluentAssertions" Version="6.12.2" />
-    <PackageReference Include="Meziantou.Extensions.Logging.Xunit" Version="1.0.7" />
+    <PackageReference Include="Meziantou.Extensions.Logging.Xunit" Version="1.0.8" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="9.0.0" />
     <PackageReference Include="Microsoft.NET.Test.Sdk" Version="17.11.1" />
     <PackageReference Include="Testcontainers.MongoDb" Version="4.0.0" />
