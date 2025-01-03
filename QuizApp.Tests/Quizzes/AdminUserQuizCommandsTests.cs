@@ -6,7 +6,6 @@ using QuizApp.Tests.Fixtures;
 using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Quizzes;
 
@@ -33,7 +32,7 @@ public sealed class AdminUserQuizCommandsTests : IClassFixture<QuizApiFixture>, 
         await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author2", "authorId2", 1);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes");
+        using var response = await _client.DeleteAsync($"/quizzes", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -49,7 +48,7 @@ public sealed class AdminUserQuizCommandsTests : IClassFixture<QuizApiFixture>, 
         var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author", "authorId", 0);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -57,12 +56,12 @@ public sealed class AdminUserQuizCommandsTests : IClassFixture<QuizApiFixture>, 
         allQuizzes.Should().BeEmpty();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllAsync(_serviceProvider);
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 

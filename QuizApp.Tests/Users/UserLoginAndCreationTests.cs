@@ -4,7 +4,6 @@ using QuizApp.Tests.Fixtures;
 using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Json;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
@@ -32,11 +31,11 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/users", createDto);
+        using var response = await _client.PostAsJsonAsync("/users", createDto, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken: TestContext.Current.CancellationToken);
         problemDetails!.Errors["Login"].Should().ContainMatch(("*at least 5 characters*"));
     }
 
@@ -52,11 +51,11 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/users", createDto);
+        using var response = await _client.PostAsJsonAsync("/users", createDto, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.Should().BeSuccessful();
-        var body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -72,7 +71,7 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/users", createDto);
+        using var response = await _client.PostAsJsonAsync("/users", createDto, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.Should().BeSuccessful();
@@ -91,7 +90,7 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
             Password = Path.GetRandomFileName(),
             UserName = Path.GetRandomFileName()
         };
-        using var createResponse = await _client.PostAsJsonAsync("/users", createDto);
+        using var createResponse = await _client.PostAsJsonAsync("/users", createDto, cancellationToken: TestContext.Current.CancellationToken);
         createResponse.EnsureSuccessStatusCode();
         var credentials = new CredentialsDTO
         {
@@ -100,11 +99,11 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/login", credentials);
+        using var response = await _client.PostAsJsonAsync("/login", credentials, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.Should().BeSuccessful();
-        var body = await response.Content.ReadAsStringAsync();
+        var body = await response.Content.ReadAsStringAsync(TestContext.Current.CancellationToken);
         body.Should().NotBeNullOrWhiteSpace();
     }
 
@@ -118,7 +117,7 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
             Password = Path.GetRandomFileName(),
             UserName = Path.GetRandomFileName()
         };
-        using var createResponse = await _client.PostAsJsonAsync("/users", createDto);
+        using var createResponse = await _client.PostAsJsonAsync("/users", createDto, cancellationToken: TestContext.Current.CancellationToken);
         createResponse.EnsureSuccessStatusCode();
         var credentials = new CredentialsDTO
         {
@@ -127,11 +126,11 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/login", credentials);
+        using var response = await _client.PostAsJsonAsync("/login", credentials, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken: TestContext.Current.CancellationToken);
         problemDetails!.Errors["Login,Password"].Should().Contain("Invalid Login or Password");
     }
 
@@ -145,20 +144,20 @@ public sealed class UserLoginAndCreationTests : IClassFixture<QuizApiFixture>, I
         };
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/login", credentials);
+        using var response = await _client.PostAsJsonAsync("/login", credentials, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken: TestContext.Current.CancellationToken);
         problemDetails!.Errors["Login,Password"].Should().Contain("Invalid Login or Password");
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }

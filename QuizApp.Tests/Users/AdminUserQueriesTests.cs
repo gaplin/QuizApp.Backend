@@ -11,11 +11,10 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
-public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
+public sealed class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
 {
     private User _user = null!; // initialized in InitializeAsync
     private string _token = null!; // initialized in InitializeAsync
@@ -45,11 +44,11 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         var expectedResult = all_users.Select(x => new UserDTO { Id = x.Id!, UserName = x.UserName, UserType = x.UserType });
 
         // Act
-        using var response = await _client.GetAsync("/users");
+        using var response = await _client.GetAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var users = await response.Content.ReadFromJsonAsync<List<UserDTO>>(_serializerOptions);
+        var users = await response.Content.ReadFromJsonAsync<List<UserDTO>>(_serializerOptions, cancellationToken: TestContext.Current.CancellationToken);
         users.Should().BeEquivalentTo(expectedResult);
     }
 
@@ -62,11 +61,11 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         var param = userToQuery.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}");
+        using var response = await _client.GetAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var user = await response.Content.ReadFromJsonAsync<UserDTO>(_serializerOptions);
+        var user = await response.Content.ReadFromJsonAsync<UserDTO>(_serializerOptions, cancellationToken: TestContext.Current.CancellationToken);
         user.Should().BeEquivalentTo(new UserDTO { Id = userToQuery.Id!, UserName = userToQuery.UserName, UserType = userToQuery.UserType });
     }
 
@@ -78,7 +77,7 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}");
+        using var response = await _client.GetAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -92,7 +91,7 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}/role");
+        using var response = await _client.GetAsync($"/users/{param}/role", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -107,20 +106,20 @@ public class AdminUserQueriesTests : IClassFixture<QuizApiFixture>, IAsyncLifeti
         var param = userToQuery.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}/role");
+        using var response = await _client.GetAsync($"/users/{param}/role", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var role = await response.Content.ReadFromJsonAsync<EUserType>(_serializerOptions);
+        var role = await response.Content.ReadFromJsonAsync<EUserType>(_serializerOptions, cancellationToken: TestContext.Current.CancellationToken);
         role.Should().Be(userToQuery.UserType);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 

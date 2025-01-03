@@ -6,7 +6,6 @@ using QuizApp.Tests.Fixtures;
 using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
@@ -31,7 +30,7 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         // Act
-        using var response = await _client.DeleteAsync("/users");
+        using var response = await _client.DeleteAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -41,7 +40,7 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
     public async Task DeletingAllUsers_WithoutAuthHeader_ReturnsUnathorized()
     {
         // Act
-        using var response = await _client.DeleteAsync("/users");
+        using var response = await _client.DeleteAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -54,7 +53,7 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         var param = _user.Id;
 
         // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        using var response = await _client.DeleteAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -68,7 +67,7 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        using var response = await _client.DeleteAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -82,7 +81,7 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         var param = _user.Id;
 
         // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        using var response = await _client.DeleteAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -90,11 +89,11 @@ public sealed class NormalUserCommandsTests : IClassFixture<QuizApiFixture>, IAs
         allUsers.Should().NotContain(x => x.Id == _user.Id);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
 

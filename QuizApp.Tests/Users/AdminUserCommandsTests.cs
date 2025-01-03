@@ -6,11 +6,10 @@ using QuizApp.Tests.Fixtures;
 using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
-public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
+public sealed class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
 {
     private User _user = null!; // initialized in InitializeAsync
     private string _token = null!; // initialized in InitializeAsync
@@ -32,7 +31,7 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
         _ = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 
         // Act
-        using var response = await _client.DeleteAsync("/users");
+        using var response = await _client.DeleteAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -49,7 +48,7 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
         var param = userToDelete.Id;
 
         // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        using var response = await _client.DeleteAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -65,18 +64,18 @@ public class AdminUserCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifet
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.DeleteAsync($"/users/{param}");
+        using var response = await _client.DeleteAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.Admin);
 

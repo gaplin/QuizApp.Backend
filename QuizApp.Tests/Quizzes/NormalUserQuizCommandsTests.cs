@@ -10,11 +10,10 @@ using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Headers;
 using System.Net.Http.Json;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Quizzes;
 
-public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
+public sealed class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsyncLifetime
 {
     private readonly HttpClient _client;
     private readonly IServiceProvider _serviceProvider;
@@ -35,7 +34,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         var quiz = new CreateQuizDTO();
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/quizzes", quiz);
+        using var response = await _client.PostAsJsonAsync("/quizzes", quiz, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -79,7 +78,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/quizzes", quiz);
+        using var response = await _client.PostAsJsonAsync("/quizzes", quiz, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
@@ -112,11 +111,11 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         // Act
-        using var response = await _client.PostAsJsonAsync("/quizzes", quiz);
+        using var response = await _client.PostAsJsonAsync("/quizzes", quiz, cancellationToken: TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>();
+        var problemDetails = await response.Content.ReadFromJsonAsync<HttpValidationProblemDetails>(cancellationToken: TestContext.Current.CancellationToken);
         problemDetails!.Errors["Questions[0].CorrectAnswer"].Should().ContainSingle($"Value must be between 0 and {answersCount - 1} inclusive");
     }
 
@@ -124,7 +123,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
     public async Task DeletingAll_WithoutAuthHeader_ReturnsUnathorized()
     {
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes");
+        using var response = await _client.DeleteAsync($"/quizzes", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -137,7 +136,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes");
+        using var response = await _client.DeleteAsync($"/quizzes", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -150,7 +149,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         var id = new string('a', 24);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -164,7 +163,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         var id = new string('a', 24);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -178,7 +177,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "author", "authorId", 0);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -192,7 +191,7 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, _user.UserName, _user.Id!, 1);
 
         // Act
-        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}");
+        using var response = await _client.DeleteAsync($"/quizzes/{quiz.Id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NoContent);
@@ -200,12 +199,12 @@ public class NormalUserQuizCommandsTests : IClassFixture<QuizApiFixture>, IAsync
         allQuizzes.Should().BeEmpty();
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllAsync(_serviceProvider);
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
 

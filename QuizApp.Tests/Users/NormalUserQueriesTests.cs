@@ -11,7 +11,6 @@ using System.Net.Http.Headers;
 using System.Net.Http.Json;
 using System.Text.Json;
 using System.Text.Json.Serialization;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Users;
 
@@ -38,7 +37,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         _client.DefaultRequestHeaders.Authorization = new AuthenticationHeaderValue("Bearer", _token);
 
         // Act
-        using var response = await _client.GetAsync("/users");
+        using var response = await _client.GetAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -48,7 +47,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
     public async Task GettingAllUsers_WithoutAuthHeader_ReturnsUnathorized()
     {
         // Act
-        using var response = await _client.GetAsync("/users");
+        using var response = await _client.GetAsync("/users", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -62,7 +61,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}");
+        using var response = await _client.GetAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -75,7 +74,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}");
+        using var response = await _client.GetAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -89,11 +88,11 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}");
+        using var response = await _client.GetAsync($"/users/{param}", TestContext.Current.CancellationToken);
 
         // Assert
         response.Should().BeSuccessful();
-        var userDto = await response.Content.ReadFromJsonAsync<UserDTO>(_serializerOptions);
+        var userDto = await response.Content.ReadFromJsonAsync<UserDTO>(_serializerOptions, cancellationToken: TestContext.Current.CancellationToken);
         userDto.Should().BeEquivalentTo(new UserDTO { Id = _user.Id!, UserName = _user.UserName, UserType = _user.UserType });
     }
 
@@ -105,7 +104,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id![..^3] + _user.Id[..3];
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}/role");
+        using var response = await _client.GetAsync($"/users/{param}/role", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Forbidden);
@@ -118,7 +117,7 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}/role");
+        using var response = await _client.GetAsync($"/users/{param}/role", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.Unauthorized);
@@ -132,20 +131,20 @@ public sealed class NormalUserQueriesTests : IClassFixture<QuizApiFixture>, IAsy
         var param = _user.Id;
 
         // Act
-        using var response = await _client.GetAsync($"/users/{param}/role");
+        using var response = await _client.GetAsync($"/users/{param}/role", TestContext.Current.CancellationToken);
 
         // Assert
         response.Should().BeSuccessful();
-        var role = await response.Content.ReadFromJsonAsync<EUserType>(_serializerOptions);
+        var role = await response.Content.ReadFromJsonAsync<EUserType>(_serializerOptions, cancellationToken: TestContext.Current.CancellationToken);
         role.Should().Be(_user.UserType);
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllUsersAsync(_serviceProvider);
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         _user = await DbUtilities.CreateRandomUserAsync(_serviceProvider, EUserTypeModel.User);
 

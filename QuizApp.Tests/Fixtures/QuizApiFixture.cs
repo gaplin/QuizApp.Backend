@@ -1,4 +1,4 @@
-﻿using Meziantou.Extensions.Logging.Xunit;
+﻿using Meziantou.Extensions.Logging.Xunit.v3;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.AspNetCore.Mvc.Testing;
 using Microsoft.AspNetCore.TestHost;
@@ -8,7 +8,6 @@ using Microsoft.Extensions.Logging.Abstractions;
 using QuizApp.API;
 using QuizApp.Infrastructure.DbSettings;
 using Testcontainers.MongoDb;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Fixtures;
 
@@ -36,12 +35,13 @@ public sealed class QuizApiFixture : WebApplicationFactory<IApiMarker>, IAsyncLi
         });
     }
 
-    async Task IAsyncLifetime.DisposeAsync()
+    public override async ValueTask DisposeAsync()
     {
         await _mongoDb.DisposeAsync();
+        await base.DisposeAsync();
     }
 
-    public async Task InitializeAsync()
+    public async ValueTask InitializeAsync()
     {
         await _mongoDb.StartAsync();
     }

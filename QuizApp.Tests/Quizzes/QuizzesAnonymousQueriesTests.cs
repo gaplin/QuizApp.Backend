@@ -5,7 +5,6 @@ using QuizApp.Tests.Fixtures;
 using QuizApp.Tests.TestsUtils;
 using System.Net;
 using System.Net.Http.Json;
-using Xunit.Abstractions;
 
 namespace QuizApp.Tests.Quizzes;
 
@@ -28,11 +27,11 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         var allQuizzes = await DbUtilities.CreateRandomQuizzesAsync(_serviceProvider, 3);
 
         // Act
-        using var response = await _client.GetAsync("/quizzes");
+        using var response = await _client.GetAsync("/quizzes", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var resultList = await response.Content.ReadFromJsonAsync<List<Quiz>>();
+        var resultList = await response.Content.ReadFromJsonAsync<List<Quiz>>(cancellationToken: TestContext.Current.CancellationToken);
         resultList.Should().BeEquivalentTo(allQuizzes);
     }
 
@@ -52,11 +51,11 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         });
 
         // Act
-        using var response = await _client.GetAsync("/quizzes/baseInfo");
+        using var response = await _client.GetAsync("/quizzes/baseInfo", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var resultList = await response.Content.ReadFromJsonAsync<List<QuizBase>>();
+        var resultList = await response.Content.ReadFromJsonAsync<List<QuizBase>>(cancellationToken: TestContext.Current.CancellationToken);
         resultList.Should().BeEquivalentTo(baseInfos);
     }
 
@@ -67,7 +66,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         var id = new string('a', 24);
 
         // Act
-        using var response = await _client.GetAsync($"/quizzes/{id}");
+        using var response = await _client.GetAsync($"/quizzes/{id}", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.BadRequest);
@@ -80,7 +79,7 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         var id = new string('a', 24);
 
         // Act
-        using var response = await _client.GetAsync($"/quizzes/{id}?shuffle=false");
+        using var response = await _client.GetAsync($"/quizzes/{id}?shuffle=false", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.NotFound);
@@ -93,11 +92,11 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "auth", "authId", 10);
 
         // Act
-        using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=false");
+        using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=false", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var quizResult = await response.Content.ReadFromJsonAsync<Quiz>();
+        var quizResult = await response.Content.ReadFromJsonAsync<Quiz>(cancellationToken: TestContext.Current.CancellationToken);
         quizResult.Should().BeEquivalentTo(quiz, opts => opts.WithStrictOrdering());
     }
 
@@ -108,11 +107,11 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         var quiz = await DbUtilities.CreateRandomQuizAsync(_serviceProvider, "auth", "authId", 10);
 
         // Act
-        using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=true");
+        using var response = await _client.GetAsync($"/quizzes/{quiz.Id}?shuffle=true", TestContext.Current.CancellationToken);
 
         // Assert
         response.StatusCode.Should().Be(HttpStatusCode.OK);
-        var quizResult = await response.Content.ReadFromJsonAsync<Quiz>();
+        var quizResult = await response.Content.ReadFromJsonAsync<Quiz>(cancellationToken: TestContext.Current.CancellationToken);
         quizResult.Should().NotBeEquivalentTo(quiz, opts => opts.WithStrictOrdering());
         quizResult.Should().BeEquivalentTo(quiz, opts => opts.Excluding(x => x.Questions));
         quizResult!.Questions.Should().AllSatisfy(question =>
@@ -123,13 +122,13 @@ public sealed class QuizzesAnonymousQueriesTests : IClassFixture<QuizApiFixture>
         });
     }
 
-    public async Task DisposeAsync()
+    public async ValueTask DisposeAsync()
     {
         await DbUtilities.DeleteAllQuizzesAsync(_serviceProvider);
     }
 
-    public Task InitializeAsync()
+    public ValueTask InitializeAsync()
     {
-        return Task.CompletedTask;
+        return ValueTask.CompletedTask;
     }
 }
