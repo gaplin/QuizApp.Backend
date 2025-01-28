@@ -10,3 +10,6 @@ updates:
     target-branch: "main"
     schedule:
       interval: "weekly"
+    ignore:
+      - dependency-name: "FluentAssertions"
+        versions: [">=8.x"]
