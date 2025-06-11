@@ -1,0 +1,17 @@
+<Solution>
+  <Folder Name="/Solution Items/">
+    <File Path=".dockerignore" />
+    <File Path=".editorconfig" />
+    <File Path=".gitattributes" />
+    <File Path=".gitignore" />
+    <File Path="LICENSE.txt" />
+    <File Path="README.md" />
+  </Folder>
+  <Project Path="docker-compose.dcproj">
+    <Build />
+  </Project>
+  <Project Path="QuizApp.API/QuizApp.API.csproj" />
+  <Project Path="QuizApp.Domain/QuizApp.Domain.csproj" />
+  <Project Path="QuizApp.Infrastructure/QuizApp.Infrastructure.csproj" />
+  <Project Path="QuizApp.Tests/QuizApp.Tests.csproj" />
+</Solution>

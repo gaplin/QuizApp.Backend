@@ -22,11 +22,11 @@ jobs:
       with:
         dotnet-version: 9.x
     - name: Restore dependencies
-      run: dotnet restore QuizApp.Backend.sln
+      run: dotnet restore QuizApp.Backend.slnx
     - name: Build
-      run: dotnet build QuizApp.Backend.sln --no-restore
+      run: dotnet build QuizApp.Backend.slnx --no-restore
     - name: Test
-      run: dotnet test QuizApp.Backend.sln --no-build --verbosity normal /p:CollectCoverage=true
+      run: dotnet test QuizApp.Backend.slnx --no-build --verbosity normal /p:CollectCoverage=true
             /p:CoverletOutput=TestResults/coverage.lcov /p:CoverletOutputFormat=lcov
     - name: Publish coverage report to coveralls.io     
       uses: coverallsapp/github-action@v2
