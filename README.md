@@ -6,7 +6,7 @@
 ASP.NET Core Minimal Api.
 
 ## Requirements
-- .NET8
+- .NET 10
 - MongoDB connection (configuration in appsettings) *or* docker if using included docker-compose
 
 ## Features
