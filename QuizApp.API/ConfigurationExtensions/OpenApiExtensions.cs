@@ -1,7 +1,7 @@
 ﻿using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.OpenApi;
-using Microsoft.OpenApi.Models;
+using Microsoft.OpenApi;
 
 namespace QuizApp.API.ConfigurationExtensions;
 
@@ -20,25 +20,32 @@ public static class OpenApiExtensions
                       Enter your token in the text input below.<br>
                       Example: '12345abcdef'
                       """,
-            Reference = new()
-            {
-                Type = ReferenceType.SecurityScheme,
-                Id = JwtBearerDefaults.AuthenticationScheme
-            }
         };
+
         options.AddDocumentTransformer((doc, context, token) =>
         {
             doc.Components ??= new();
-            doc.Components.SecuritySchemes.Add(JwtBearerDefaults.AuthenticationScheme, scheme);
+            doc.Components.SecuritySchemes = new Dictionary<string, IOpenApiSecurityScheme>
+            {
+                { JwtBearerDefaults.AuthenticationScheme, scheme }
+            };
             return Task.CompletedTask;
         });
         options.AddOperationTransformer((op, context, token) =>
         {
             if (context.Description.ActionDescriptor.EndpointMetadata.OfType<IAuthorizeData>().Any())
             {
-                op.Security = [new() { [scheme] = [] }];
+                op.Security = 
+                [
+                    new OpenApiSecurityRequirement() 
+                    {
+                        {
+                            new OpenApiSecuritySchemeReference(scheme.Name),
+                            []
+                        }
+                    }
+                ];
             }
-            var req = new OpenApiSecurityRequirement();
             return Task.CompletedTask;
         });
         return options;
@@ -51,7 +58,7 @@ public static class OpenApiExtensions
             var type = context.JsonTypeInfo.Type;
             if (type.IsEnum)
             {
-                schema.Type = "string";
+                schema.Type = JsonSchemaType.String;
             }
             return Task.CompletedTask;
         });

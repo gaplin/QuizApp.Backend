@@ -6,26 +6,23 @@ using System.Security.Claims;
 
 namespace QuizApp.API.Endpoints;
 
-public class QuizzesEndpoints : CarterModule
+public class QuizzesEndpoints : ICarterModule
 {
-    public QuizzesEndpoints()
-        : base("/quizzes")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-        WithTags("Quizzes");
-    }
-    public override void AddRoutes(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/", async (IQuizService service) =>
+        var group = app.MapGroup("/quizzes").WithTags("Quizzes");
+
+        group.MapGet("/", async (IQuizService service) =>
             await service.GetAsync()
             )
             .Produces<List<Quiz>>();
 
-        app.MapGet("/baseInfo", async (IQuizService service) =>
+        group.MapGet("/baseInfo", async (IQuizService service) =>
             await service.GetBaseInfoAsync()
             )
             .Produces<List<QuizBase>>();
 
-        app.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService service) =>
+        group.MapGet("/{id:length(24)}", async (string id, bool shuffle, IQuizService service) =>
             await service.GetAsync(id, shuffle)
                 is Quiz quiz
                     ? Results.Ok(quiz)
@@ -33,7 +30,7 @@ public class QuizzesEndpoints : CarterModule
             .Produces<Quiz>()
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPost("/", async (CreateQuizDTO newQuiz, IQuizService service, ClaimsPrincipal claims) =>
+        group.MapPost("/", async (CreateQuizDTO newQuiz, IQuizService service, ClaimsPrincipal claims) =>
         {
             var validationErrors = await service.InsertAsync(newQuiz, claims);
             if (validationErrors is null)
@@ -47,7 +44,7 @@ public class QuizzesEndpoints : CarterModule
             .Produces(StatusCodes.Status401Unauthorized)
             .ProducesValidationProblem();
 
-        app.MapDelete("/{id:length(24)}", async (string id, IQuizService service, ClaimsPrincipal claims) =>
+        group.MapDelete("/{id:length(24)}", async (string id, IQuizService service, ClaimsPrincipal claims) =>
         {
             var (forbidden, notFound) = await service.DeleteAsync(id, claims);
             if (forbidden) return Results.Forbid();
@@ -60,7 +57,7 @@ public class QuizzesEndpoints : CarterModule
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapDelete("/", async (IQuizService service) =>
+        group.MapDelete("/", async (IQuizService service) =>
         {
             await service.DeleteAsync();
             return Results.NoContent();

@@ -6,16 +6,13 @@ using QuizApp.Domain.Interfaces.Services;
 
 namespace QuizApp.API.Endpoints;
 
-public class UsersEndpoints : CarterModule
+public class UsersEndpoints : ICarterModule
 {
-    public UsersEndpoints()
-        : base("/users")
+    public void AddRoutes(IEndpointRouteBuilder app)
     {
-        WithTags("Users");
-    }
-    public override void AddRoutes(IEndpointRouteBuilder app)
-    {
-        app.MapGet("/", async (IUserService service) =>
+        var group = app.MapGroup("/users").WithTags("Users");
+
+        group.MapGet("/", async (IUserService service) =>
             await service.GetAsync()
             )
             .RequireAuthorization("Admin")
@@ -23,7 +20,7 @@ public class UsersEndpoints : CarterModule
             .Produces(StatusCodes.Status401Unauthorized)
             .Produces(StatusCodes.Status403Forbidden);
 
-        app.MapGet("/{id:length(24)}", async (string id, IUserService service) =>
+        group.MapGet("/{id:length(24)}", async (string id, IUserService service) =>
             await service.GetByIdAsync(id)
                 is UserDTO user
                     ? Results.Ok(user)
@@ -35,7 +32,7 @@ public class UsersEndpoints : CarterModule
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapGet("/{id:length(24)}/role", async (string id, IUserService service) =>
+        group.MapGet("/{id:length(24)}/role", async (string id, IUserService service) =>
             await service.GetUserRoleAsync(id)
                 is EUserType role
                     ? Results.Ok(role)
@@ -47,7 +44,7 @@ public class UsersEndpoints : CarterModule
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapPost("/", async (CreateUserDTO newUser, IUserService service) =>
+        group.MapPost("/", async (CreateUserDTO newUser, IUserService service) =>
         {
             var (token, errors) = await service.CreateAsync(newUser);
             if (errors is null)
@@ -59,9 +56,8 @@ public class UsersEndpoints : CarterModule
             .Produces<string>()
             .ProducesValidationProblem();
 
-        app.MapDelete("/{id:length(24)}", async (string id, IUserService service) =>
+        group.MapDelete("/{id:length(24)}", async (string id, IUserService service) =>
             await service.DeleteAsync(id)
-                is true
                     ? Results.NoContent()
                     : Results.NotFound())
             .RequireAuthorization()
@@ -71,7 +67,7 @@ public class UsersEndpoints : CarterModule
             .Produces(StatusCodes.Status403Forbidden)
             .Produces(StatusCodes.Status404NotFound);
 
-        app.MapDelete("/", async (IUserService service) =>
+        group.MapDelete("/", async (IUserService service) =>
         {
             await service.DeleteAsync();
             return Results.NoContent();
