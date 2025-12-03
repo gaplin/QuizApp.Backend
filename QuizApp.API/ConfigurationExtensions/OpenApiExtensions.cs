@@ -11,7 +11,7 @@ public static class OpenApiExtensions
     {
         var scheme = new OpenApiSecurityScheme()
         {
-            Name = JwtBearerDefaults.AuthenticationScheme,
+            Name = "Authorization",
             Type = SecuritySchemeType.Http,
             Scheme = JwtBearerDefaults.AuthenticationScheme,
             BearerFormat = "JWT",
@@ -40,7 +40,7 @@ public static class OpenApiExtensions
                     new OpenApiSecurityRequirement() 
                     {
                         {
-                            new OpenApiSecuritySchemeReference(scheme.Name),
+                            new OpenApiSecuritySchemeReference(JwtBearerDefaults.AuthenticationScheme, context.Document),
                             []
                         }
                     }
