@@ -13,7 +13,7 @@ namespace QuizApp.Tests.Fixtures;
 
 public sealed class QuizApiFixture : WebApplicationFactory<IApiMarker>, IAsyncLifetime
 {
-    private readonly MongoDbContainer _mongoDb = new MongoDbBuilder().WithImage("mongo:8.0.1").Build();
+    private readonly MongoDbContainer _mongoDb = new MongoDbBuilder("mongo:8.0.1").Build();
 
     public ITestOutputHelper? OutputHelper { get; set; }
 
