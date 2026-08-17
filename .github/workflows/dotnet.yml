@@ -26,11 +26,10 @@ jobs:
     - name: Build
       run: dotnet build QuizApp.Backend.slnx --no-restore
     - name: Test
-      run: dotnet test QuizApp.Backend.slnx --no-build --verbosity normal /p:CollectCoverage=true
-            /p:CoverletOutput=TestResults/coverage.lcov /p:CoverletOutputFormat=lcov
+      run: dotnet test QuizApp.Backend.slnx --no-build --verbosity normal --coverlet --coverlet-output-format lcov
     - name: Publish coverage report to coveralls.io     
       uses: coverallsapp/github-action@v2
       with:
-        file: QuizApp.Tests/TestResults/coverage.lcov
+        file: TestResults/coverage*.info
         format: lcov
         github-token: ${{ secrets.GITHUB_TOKEN }} 
