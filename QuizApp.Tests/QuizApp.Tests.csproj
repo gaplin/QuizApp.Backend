@@ -12,10 +12,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="coverlet.msbuild" Version="10.0.1">
-      <PrivateAssets>all</PrivateAssets>
-      <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>
-    </PackageReference>
+    <PackageReference Include="coverlet.MTP" Version="10.0.1" />
     <PackageReference Include="FluentAssertions" Version="[7.2.2]" />
     <PackageReference Include="Meziantou.Extensions.Logging.Xunit.v3" Version="3.0.1" />
     <PackageReference Include="Microsoft.AspNetCore.Mvc.Testing" Version="10.0.11" />
